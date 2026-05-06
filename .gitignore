@@ -44,3 +44,11 @@ prisma/migrations/*/migration.lock
 
 # coverage
 coverage/
+
+# claude code
+.claude/
+CLAUDE.md
+.claude.json
+.claude.json.backup
+.mcp.json
+

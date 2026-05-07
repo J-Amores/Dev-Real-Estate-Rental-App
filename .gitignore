@@ -52,3 +52,11 @@ CLAUDE.md
 .claude.json.backup
 .mcp.json
 
+.env*.local
+
+# playwright
+.playwright-mcp/
+.playwright/
+playwright-report/
+test-results/
+playwright/.cache/

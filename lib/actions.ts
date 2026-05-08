@@ -2,10 +2,12 @@
 
 import bcrypt from "bcrypt";
 import { AuthError } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { signIn, signOut } from "@/lib/auth";
+import { auth, signIn, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { profileSchema } from "@/lib/schemas";
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -103,4 +105,39 @@ export async function signInAction(
 
 export async function signOutAction() {
   await signOut({ redirectTo: "/" });
+}
+
+export async function updateProfileAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const session = await auth();
+  if (!session?.user) return { errors: { _form: ["Not signed in"] } };
+
+  const parsed = profileSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { errors: z.flattenError(parsed.error).fieldErrors };
+  }
+  const data = parsed.data;
+
+  if (session.user.role === "tenant") {
+    if (!session.user.tenantId) {
+      return { errors: { _form: ["Tenant profile missing"] } };
+    }
+    await prisma.tenant.update({
+      where: { id: session.user.tenantId },
+      data,
+    });
+  } else {
+    if (!session.user.managerId) {
+      return { errors: { _form: ["Manager profile missing"] } };
+    }
+    await prisma.manager.update({
+      where: { id: session.user.managerId },
+      data,
+    });
+  }
+
+  revalidatePath("/dashboard/settings");
+  return { message: "Profile updated" };
 }

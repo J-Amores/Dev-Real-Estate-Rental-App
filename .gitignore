@@ -57,6 +57,7 @@ CLAUDE.md
 # playwright
 .playwright-mcp/
 .playwright/
+.playwright-cli/
 playwright-report/
 test-results/
 playwright/.cache/

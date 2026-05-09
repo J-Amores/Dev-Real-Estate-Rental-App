@@ -4,6 +4,8 @@
 **Source:** Adapted from `app-guide.md` (a structured guide derived from EdRoh's "Build an Enterprise Nextjs Rental App" YouTube tutorial, 12h 19m).
 **Stack pivot:** From the guide's AWS-heavy two-repo architecture (Next.js client + Express server + Cognito + EC2 + RDS + S3 + API Gateway + Amplify Hosting) to a single Next.js 15 app on Vercel with Neon Postgres + PostGIS.
 
+> **Design / UI superseded.** All frontend, visual, and UX guidance in this spec has been replaced by `PRODUCT.md`, `DESIGN.md`, and `DESIGN.json` at the project root, applied via the `impeccable:impeccable` skill. This spec remains authoritative for **data model, server actions, page flows, auth, deployment, and PostGIS** (§5–§9, §11, §14 phase ladder), but treat any reference to shadcn/ui, the bundled `tailwind.config.ts`, `<FormField/>`, `customgreys-*` classes, `use-mobile`, or the "Polish" phase as historical. When designing or building UI, follow `DESIGN.md` tokens (Hospitable Evergreen, OKLCH ramps, Inter, mixed corners, flat-by-default) and let `impeccable` drive component shape — do not re-import the asset-download UI bundle.
+
 ---
 
 ## 1. Goals & non-goals
@@ -15,7 +17,7 @@ A two-sided real-estate rental marketplace MVP:
 - Auth via email + password (role chosen at signup: `tenant` | `manager`).
 - Geospatial filtering via PostgreSQL + PostGIS.
 - Hosted on Vercel; database on Neon (via the Neon ↔ Vercel native integration).
-- UI polished via the `impeccable` skill once core flows work.
+- UI built **and** polished via the `impeccable:impeccable` skill, sourcing all visual decisions from `PRODUCT.md` / `DESIGN.md` / `DESIGN.json` (not a final-phase polish — applied continuously from Phase 4 onward).
 
 ### Non-goals (cut from the source guide)
 - AWS Cognito, EC2, RDS, S3, API Gateway, Amplify Hosting.
@@ -57,7 +59,7 @@ Top-level directories: `app/`, `components/`, `lib/`, `prisma/`, `public/`. Five
 | Concern | Choice |
 |---|---|
 | Framework | Next.js 15 (App Router) + TypeScript + Tailwind |
-| UI primitives | shadcn/ui (installed with `--legacy-peer-deps` for React 19) |
+| UI primitives | ~~shadcn/ui~~ **superseded** — raw Tailwind primitives styled per `DESIGN.md` tokens; component shape driven by the `impeccable` skill |
 | Forms | react-hook-form + zod + @hookform/resolvers |
 | Auth | Auth.js v5 (`next-auth@5`), Credentials provider, JWT sessions |
 | Password hashing | bcrypt |
@@ -70,7 +72,8 @@ Top-level directories: `app/`, `components/`, `lib/`, `prisma/`, `public/`. Five
 | Icons | lucide-react |
 | Utils | lodash, date-fns |
 | Hosting | Vercel |
-| UI polish | `impeccable:impeccable` skill (final phase) |
+| UI design system | `PRODUCT.md` + `DESIGN.md` + `DESIGN.json` (project root); all visual decisions cite their tokens |
+| UI workflow | `impeccable:impeccable` skill — applied continuously, not just at end |
 
 Notably absent vs. the guide:
 - No Redux / RTK Query / `state/` directory.
@@ -108,12 +111,13 @@ real-estate-app/
 │           └── [id]/edit/page.tsx        # update + delete
 │
 ├── components/
-│   ├── ui/                               # shadcn primitives
-│   ├── form-field.tsx                    # workhorse (no `file` variant)
-│   ├── sidebar.tsx
+│   ├── sidebar.tsx                       # styled per DESIGN.md §5 Navigation
 │   ├── header.tsx
 │   ├── property-card.tsx
 │   └── application-card.tsx
+│   # NOTE: components/ui/ (shadcn) and form-field.tsx (FormField workhorse)
+│   # are SUPERSEDED — see top-of-doc banner. Build inputs/buttons/selects
+│   # as plain Tailwind elements that cite DESIGN.md tokens.
 │
 ├── lib/
 │   ├── prisma.ts                         # PrismaClient singleton
@@ -121,8 +125,8 @@ real-estate-app/
 │   ├── schemas.ts                        # all zod schemas
 │   ├── constants.ts                      # enums + icon maps
 │   ├── utils.ts                          # cn, cleanParams, formatters
-│   ├── actions.ts                        # all 8 Server Actions
-│   └── use-mobile.ts                     # required by shadcn sidebar
+│   └── actions.ts                        # all 8 Server Actions
+│   # NOTE: lib/use-mobile.ts is SUPERSEDED (was a shadcn-sidebar hook).
 │
 ├── prisma/
 │   ├── schema.prisma
@@ -363,10 +367,10 @@ Files copied verbatim or near-verbatim from `asset-download/`:
 | `client/lib/constants.ts` | `lib/constants.ts` | Verbatim |
 | `client/lib/utils.ts` | `lib/utils.ts` | Verbatim |
 | `client/types/index.d.ts` | (delete) | Use `@prisma/client` types directly |
-| `client/hooks/use-mobile.tsx` | `lib/use-mobile.ts` | Required by shadcn sidebar |
-| `client/components/FormField.tsx` | `components/form-field.tsx` | Remove `file` variant; replace `customgreys-*` Tailwind classes with stock greys |
-| `client/app/globals.css` | `app/globals.css` | Drop the Amplify Authenticator overrides |
-| `client/app/tailwind.config.ts` | `tailwind.config.ts` | Verbatim |
+| ~~`client/hooks/use-mobile.tsx`~~ | — | **SUPERSEDED** (shadcn dependency) |
+| ~~`client/components/FormField.tsx`~~ | — | **SUPERSEDED** — build inputs as plain Tailwind elements per `DESIGN.md` |
+| `client/app/globals.css` | `app/globals.css` | **Partially superseded** — drop the Amplify Authenticator overrides; the Tailwind base + token layer is now hand-authored against `DESIGN.md` / `DESIGN.json`, not copied verbatim |
+| ~~`client/app/tailwind.config.ts`~~ | — | **SUPERSEDED** — Tailwind config is hand-authored to expose `DESIGN.json` tokens |
 | `client/public/.` | `public/` | Verbatim |
 
 Files **not** used:
@@ -376,18 +380,18 @@ Files **not** used:
 
 ## 13. Critical gotchas (carried from the source guide)
 
-1. **React 19 + shadcn:** install with `--legacy-peer-deps`. Without it, the shadcn CLI silently fails to add components.
+1. ~~**React 19 + shadcn:** install with `--legacy-peer-deps`.~~ **SUPERSEDED** — shadcn is no longer used; see top-of-doc banner.
 2. **PostGIS isn't first-class in Prisma.** `Unsupported("geography(Point, 4326)")` for the column; raw SQL for any write that touches it. `ST_X` / `ST_Y` for reads.
 3. **`NEXT_PUBLIC_*` is the only way to expose env vars to client code.** Forgetting the prefix is the #1 cause of "Mapbox token undefined" errors.
 4. **Server-side filtering pattern:** never accept SQL fragments from query params. Compose `` Prisma.sql`...` `` template literals which auto-parameterize values.
 5. **Pooled vs direct URL:** runtime queries use `DATABASE_URL` (pooled). Migrations and DDL (incl. `CREATE EXTENSION`) use `DATABASE_URL_UNPOOLED`. Mixing them can cause "prepared statements not supported" or "cannot do DDL in transaction" errors.
-6. **`<FormField/>` references undefined Tailwind classes:** the bundled `tailwind.config.ts` doesn't define `customgreys-*`. Replace with stock greys (`text-gray-700`, `bg-gray-100`) before importing.
+6. ~~**`<FormField/>` references undefined Tailwind classes…**~~ **SUPERSEDED** — `<FormField/>` is not used; build inputs as plain Tailwind elements per `DESIGN.md`.
 
 ---
 
 ## 14. Implementation phases (each independently testable)
 
-1. **Project bootstrap.** `create-next-app` → install deps → shadcn init → copy `asset-download/client/lib/`, `public/`, `globals.css`, `tailwind.config.ts`. App boots with default landing route still rendering.
+1. **Project bootstrap.** `create-next-app@15` (Next pinned to 15.5.x) → install deps → copy only what's still relevant from `asset-download/` (`public/`, the trimmed `lib/schemas.ts` / `lib/constants.ts` / `lib/utils.ts`). **Do not** run `shadcn init` and **do not** copy the bundled `tailwind.config.ts` or `globals.css` verbatim — Tailwind config is hand-authored to expose `DESIGN.json` tokens. App boots with default landing route still rendering.
 2. **Database setup.** Neon ↔ Vercel integration → `vercel env pull` → adapt `schema.prisma` (User model, userId rename) → `prisma migrate dev` → enable PostGIS via pgcli → adapt seed → `npm run seed`. Verify in `prisma studio`.
 3. **Auth foundation.** Auth.js v5 install + config in `lib/auth.ts` → Credentials provider → JWT callbacks → `signIn` / `signUp` server actions in `lib/actions.ts` → `/signin` and `/signup` pages → middleware. Smoke: sign up as tenant, see session.
 4. **Dashboard shell.** `app/dashboard/layout.tsx` + role-aware sidebar + settings page (read + update) end-to-end. First full Server Component → Server Action loop.
@@ -397,7 +401,7 @@ Files **not** used:
 8. **Favorites.** `toggleFavoriteAction` + `dashboard/favorites/page.tsx`. Smoke: tenant favorites a property, sees it in the favorites list, unfavorites it.
 9. **Applications.** Inline Apply form on property detail → `createApplicationAction`. Tenant `dashboard/applications/page.tsx` (own list). Manager `dashboard/applications/page.tsx` (incoming, status filter, approve/deny). On approve, Lease row created.
 10. **Landing page.** Hero + Features + Discover + CTA + Footer with framer-motion `whileInView`. Hero search geocodes via Mapbox → routes to `/search`.
-11. **Polish.** `impeccable:impeccable` skill pass over high-traffic surfaces (landing, search, property detail, dashboards). Typography, motion, hierarchy.
+11. ~~**Polish.**~~ **SUPERSEDED as a discrete phase.** Visual quality is enforced continuously from Phase 4 onward via `impeccable:impeccable` against `PRODUCT.md` / `DESIGN.md` / `DESIGN.json`. There is no end-of-project polish pass.
 12. **Deploy.** Create GitLab repo + GitHub repo, configure GitLab push-mirror to GitHub, connect Vercel to GitHub, `vercel --prod`. End-to-end smoke: sign up, create property, search, favorite, apply, approve, see lease.
 
 Each phase is independently testable. Estimated effort range: 1–6 hours per phase.

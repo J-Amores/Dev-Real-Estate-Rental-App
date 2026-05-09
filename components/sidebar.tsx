@@ -25,7 +25,7 @@ export function Sidebar({ role }: { role: UserRole }) {
 
   return (
     <nav className="flex flex-col gap-1 p-4">
-      <p className="px-2 pb-2 text-xs uppercase tracking-wide text-gray-500">
+      <p className="px-2 pb-2 text-xs tracking-wide text-ink-faint">
         {role === "tenant" ? "Tenant" : "Manager"}
       </p>
       {links.map((link) => {
@@ -34,10 +34,11 @@ export function Sidebar({ role }: { role: UserRole }) {
           <Link
             key={link.href}
             href={link.href}
+            aria-current={active ? "page" : undefined}
             className={`rounded-md px-3 py-2 text-sm transition-colors ${
               active
-                ? "bg-gray-900 text-white"
-                : "text-gray-700 hover:bg-gray-100"
+                ? "bg-accent-evergreen-soft text-accent-evergreen-deep"
+                : "text-ink-soft hover:bg-surface-sunk"
             }`}
           >
             {link.label}

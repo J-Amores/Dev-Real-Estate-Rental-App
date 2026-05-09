@@ -1,26 +1,34 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: var(--font-inter);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--color-surface-paper);
+  --color-foreground: var(--color-ink);
+
+  --color-accent-evergreen: oklch(38% 0.08 165);
+  --color-accent-evergreen-deep: oklch(30% 0.08 165);
+  --color-accent-evergreen-soft: oklch(94% 0.02 165);
+
+  --color-surface-paper: oklch(98% 0.004 100);
+  --color-surface-panel: oklch(95% 0.006 90);
+  --color-surface-sunk: oklch(92% 0.008 85);
+
+  --color-ink: oklch(20% 0.012 160);
+  --color-ink-soft: oklch(38% 0.012 160);
+  --color-ink-faint: oklch(58% 0.012 160);
+
+  --color-hairline: oklch(88% 0.008 90);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss03";
+}
+
+.tabular-nums {
+  font-feature-settings: "cv11", "ss03", "tnum";
+  font-variant-numeric: tabular-nums;
 }

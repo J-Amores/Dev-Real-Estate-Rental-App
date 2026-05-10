@@ -15,10 +15,10 @@ export default async function DashboardLayout({
   if (!session?.user) redirect("/signin");
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface-paper">
       <Header email={session.user.email ?? ""} />
       <div className="flex">
-        <aside className="w-56 shrink-0 border-r bg-white min-h-[calc(100vh-3.25rem)]">
+        <aside className="w-56 shrink-0 border-r border-hairline bg-surface-panel min-h-[calc(100vh-3.25rem)]">
           <Sidebar role={session.user.role} />
         </aside>
         <main className="flex-1 p-8">{children}</main>

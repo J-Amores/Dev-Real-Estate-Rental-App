@@ -2,6 +2,9 @@
 
 import { useActionState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { updateProfileAction } from "@/lib/actions";
 import type { FormState } from "@/lib/actions";
 
@@ -20,73 +23,30 @@ export function SettingsForm({ initial }: Props) {
 
   return (
     <form action={formAction} className="space-y-4">
-      <Field
-        label="Name"
-        name="name"
-        defaultValue={initial.name}
-        errors={errors.name}
-      />
-      <Field
-        label="Email"
-        name="email"
-        type="email"
-        defaultValue={initial.email}
-        errors={errors.email}
-      />
-      <Field
-        label="Phone number"
-        name="phoneNumber"
-        defaultValue={initial.phoneNumber}
-        errors={errors.phoneNumber}
-      />
+      <Field name="name" label="Name" error={errors.name?.[0]}>
+        <Input name="name" defaultValue={initial.name} />
+      </Field>
+      <Field name="email" label="Email" error={errors.email?.[0]}>
+        <Input name="email" type="email" defaultValue={initial.email} />
+      </Field>
+      <Field name="phoneNumber" label="Phone number" error={errors.phoneNumber?.[0]}>
+        <Input name="phoneNumber" defaultValue={initial.phoneNumber} />
+      </Field>
 
       {errors._form ? (
-        <p className="text-sm text-red-600">{errors._form.join(", ")}</p>
+        <p role="alert" className="text-caption text-signal-danger">
+          {errors._form.join(", ")}
+        </p>
       ) : null}
       {state.message ? (
-        <p className="text-sm text-green-700">{state.message}</p>
+        <p role="status" className="text-caption text-signal-success">
+          {state.message}
+        </p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? "Saving…" : "Save changes"}
-      </button>
+      </Button>
     </form>
-  );
-}
-
-function Field({
-  label,
-  name,
-  type = "text",
-  defaultValue,
-  errors,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  defaultValue: string;
-  errors?: string[];
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-medium text-gray-800">
-        {label}
-      </span>
-      <input
-        name={name}
-        type={type}
-        defaultValue={defaultValue}
-        className="w-full rounded-md border px-3 py-2 text-sm"
-      />
-      {errors?.length ? (
-        <span className="mt-1 block text-xs text-red-600">
-          {errors.join(", ")}
-        </span>
-      ) : null}
-    </label>
   );
 }

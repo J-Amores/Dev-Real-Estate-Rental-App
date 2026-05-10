@@ -3,11 +3,13 @@
 import bcrypt from "bcrypt";
 import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { auth, signIn, signOut } from "@/lib/auth";
+import { geocodeAddress } from "@/lib/geocoding";
 import { prisma } from "@/lib/prisma";
-import { profileSchema } from "@/lib/schemas";
+import { profileSchema, propertySchema, type PropertyInput } from "@/lib/schemas";
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -140,4 +142,202 @@ export async function updateProfileAction(
 
   revalidatePath("/dashboard/settings");
   return { message: "Profile updated" };
+}
+
+async function requireManager(): Promise<
+  { ok: true; userId: string } | { ok: false; error: FormState }
+> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "manager") {
+    return { ok: false, error: { errors: { _form: ["Not authorized"] } } };
+  }
+  return { ok: true, userId: session.user.id };
+}
+
+function toPropertyData(v: PropertyInput) {
+  return {
+    name: v.name,
+    description: v.description,
+    pricePerMonth: v.pricePerMonth,
+    securityDeposit: v.securityDeposit,
+    applicationFee: v.applicationFee,
+    isPetsAllowed: v.isPetsAllowed,
+    isParkingIncluded: v.isParkingIncluded,
+    photoUrls: v.photoUrls,
+    amenities: v.amenities,
+    highlights: v.highlights,
+    beds: v.beds,
+    baths: v.baths,
+    squareFeet: v.squareFeet,
+    propertyType: v.propertyType,
+  };
+}
+
+export async function createPropertyAction(
+  input: PropertyInput,
+): Promise<FormState> {
+  const gate = await requireManager();
+  if (!gate.ok) return gate.error;
+
+  const parsed = propertySchema.safeParse(input);
+  if (!parsed.success) {
+    return { errors: z.flattenError(parsed.error).fieldErrors };
+  }
+  const v = parsed.data;
+
+  const coords = await geocodeAddress({
+    address: v.address,
+    city: v.city,
+    state: v.state,
+    postalCode: v.postalCode,
+    country: v.country,
+  });
+  if (!coords) {
+    return {
+      errors: {
+        address: ["Couldn't find that address. Check spelling and try again."],
+      },
+    };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const rows = await tx.$queryRaw<{ id: number }[]>`
+      INSERT INTO "Location" (address, city, state, country, "postalCode", coordinates)
+      VALUES (
+        ${v.address}, ${v.city}, ${v.state}, ${v.country}, ${v.postalCode},
+        ST_SetSRID(ST_MakePoint(${coords.lng}, ${coords.lat}), 4326)::geography
+      )
+      RETURNING id
+    `;
+    const locationId = rows[0].id;
+    await tx.property.create({
+      data: {
+        ...toPropertyData(v),
+        locationId,
+        managerId: gate.userId,
+      },
+    });
+  });
+
+  revalidatePath("/dashboard/properties");
+  redirect("/dashboard/properties");
+}
+
+export async function updatePropertyAction(
+  id: number,
+  input: PropertyInput,
+): Promise<FormState> {
+  const gate = await requireManager();
+  if (!gate.ok) return gate.error;
+
+  const parsed = propertySchema.safeParse(input);
+  if (!parsed.success) {
+    return { errors: z.flattenError(parsed.error).fieldErrors };
+  }
+  const v = parsed.data;
+
+  const existing = await prisma.property.findUnique({
+    where: { id },
+    select: {
+      managerId: true,
+      locationId: true,
+      location: {
+        select: {
+          address: true,
+          city: true,
+          state: true,
+          country: true,
+          postalCode: true,
+        },
+      },
+    },
+  });
+  if (!existing || existing.managerId !== gate.userId) {
+    return { errors: { _form: ["Property not found"] } };
+  }
+
+  const addressChanged =
+    existing.location.address !== v.address ||
+    existing.location.city !== v.city ||
+    existing.location.state !== v.state ||
+    existing.location.country !== v.country ||
+    existing.location.postalCode !== v.postalCode;
+
+  let coords: { lng: number; lat: number } | null = null;
+  if (addressChanged) {
+    coords = await geocodeAddress({
+      address: v.address,
+      city: v.city,
+      state: v.state,
+      postalCode: v.postalCode,
+      country: v.country,
+    });
+    if (!coords) {
+      return {
+        errors: {
+          address: ["Couldn't find that address. Check spelling and try again."],
+        },
+      };
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    if (addressChanged && coords) {
+      await tx.$executeRaw`
+        UPDATE "Location"
+        SET address = ${v.address},
+            city = ${v.city},
+            state = ${v.state},
+            country = ${v.country},
+            "postalCode" = ${v.postalCode},
+            coordinates = ST_SetSRID(ST_MakePoint(${coords.lng}, ${coords.lat}), 4326)::geography
+        WHERE id = ${existing.locationId}
+      `;
+    }
+    await tx.property.update({
+      where: { id },
+      data: {
+        ...toPropertyData(v),
+        amenities: { set: v.amenities },
+        highlights: { set: v.highlights },
+      },
+    });
+  });
+
+  revalidatePath("/dashboard/properties");
+  revalidatePath(`/dashboard/properties/${id}/edit`);
+  redirect("/dashboard/properties");
+}
+
+export async function deletePropertyAction(id: number): Promise<FormState> {
+  const gate = await requireManager();
+  if (!gate.ok) return gate.error;
+
+  const existing = await prisma.property.findUnique({
+    where: { id },
+    select: { managerId: true },
+  });
+  if (!existing || existing.managerId !== gate.userId) {
+    return { errors: { _form: ["Property not found"] } };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const leaseIds = (
+      await tx.lease.findMany({
+        where: { propertyId: id },
+        select: { id: true },
+      })
+    ).map((l) => l.id);
+    if (leaseIds.length) {
+      await tx.payment.deleteMany({ where: { leaseId: { in: leaseIds } } });
+    }
+    await tx.application.deleteMany({ where: { propertyId: id } });
+    if (leaseIds.length) {
+      await tx.lease.deleteMany({ where: { id: { in: leaseIds } } });
+    }
+    await tx.property.delete({ where: { id } });
+  });
+
+  revalidatePath("/dashboard/properties");
+  redirect("/dashboard/properties");
 }

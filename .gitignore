@@ -51,6 +51,7 @@ CLAUDE.md
 .claude.json
 .claude.json.backup
 .mcp.json
+agent-learnings.md
 
 .env*.local
 

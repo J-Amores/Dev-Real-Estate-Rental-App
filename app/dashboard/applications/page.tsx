@@ -1,10 +1,10 @@
 import { ApplicationStatus } from "@prisma/client";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { ApplicationCard } from "@/components/application-card";
 import { EmptyState } from "@/components/empty-state";
-import { auth } from "@/lib/auth";
+import { DocumentIcon } from "@/components/icons";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -22,14 +22,13 @@ export default async function ApplicationsPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const session = await auth();
-  if (!session?.user) redirect("/signin");
+  const user = await requireUser();
 
-  if (session.user.role === "tenant") {
-    return <TenantView tenantId={session.user.id} />;
+  if (user.role === "tenant") {
+    return <TenantView tenantId={user.id} />;
   }
   const params = await searchParams;
-  return <ManagerView managerId={session.user.id} statusParam={params.status} />;
+  return <ManagerView managerId={user.id} statusParam={params.status} />;
 }
 
 async function TenantView({ tenantId }: { tenantId: string }) {
@@ -222,21 +221,3 @@ async function ManagerView({
   );
 }
 
-function DocumentIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-7 w-7"
-      aria-hidden
-    >
-      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-      <path d="M14 3v5h5" />
-      <path d="M9 13h6M9 17h6" />
-    </svg>
-  );
-}

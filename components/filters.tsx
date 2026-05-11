@@ -4,15 +4,10 @@ import { Button, buttonClassName } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SELECT_CLASS_NAME } from "@/components/ui/select-class";
 import { searchAction } from "@/lib/actions";
 import { PROPERTY_TYPES } from "@/lib/schemas";
 import { humanize } from "@/lib/utils";
-
-const SELECT_CLS =
-  "block w-full appearance-none rounded-sm border border-hairline bg-surface-sunk px-3 py-[10px] pr-9 text-body text-ink " +
-  "transition-colors duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] " +
-  "focus-visible:outline-none focus-visible:bg-surface-paper focus-visible:ring-2 focus-visible:ring-accent-evergreen focus-visible:ring-offset-0 " +
-  "motion-reduce:transition-none";
 
 export type FilterValues = {
   location?: string;
@@ -46,7 +41,7 @@ function SelectField({ name, label, defaultValue, children }: SelectFieldProps) 
           id={name}
           name={name}
           defaultValue={defaultValue}
-          className={SELECT_CLS}
+          className={SELECT_CLASS_NAME}
         >
           {children}
         </select>

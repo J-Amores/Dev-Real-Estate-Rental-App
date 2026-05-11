@@ -2,14 +2,13 @@ import { redirect } from "next/navigation";
 
 import { PropertyForm } from "@/components/property-form";
 import { createPropertyAction } from "@/lib/actions";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewPropertyPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/signin");
-  if (session.user.role !== "manager") redirect("/dashboard/favorites");
+  const user = await requireUser();
+  if (user.role !== "manager") redirect("/dashboard/favorites");
 
   return (
     <div className="space-y-6">

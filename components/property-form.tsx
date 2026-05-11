@@ -8,8 +8,10 @@ import { Controller, useForm, type Path } from "react-hook-form";
 import { Button, buttonClassName } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { SELECT_CLASS_NAME } from "@/components/ui/select-class";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormState } from "@/lib/actions";
+import { PLACEHOLDER, onImageError } from "@/lib/images";
 import {
   AMENITIES,
   HIGHLIGHTS,
@@ -18,8 +20,6 @@ import {
   type PropertyInput,
 } from "@/lib/schemas";
 import { humanize } from "@/lib/utils";
-
-const PLACEHOLDER = "/placeholder.jpg";
 
 const EMPTY_VALUES: PropertyInput = {
   name: "",
@@ -42,12 +42,6 @@ const EMPTY_VALUES: PropertyInput = {
   country: "",
   postalCode: "",
 };
-
-const SELECT_CLS =
-  "block w-full appearance-none rounded-sm border border-hairline bg-surface-sunk px-3 py-[10px] pr-9 text-body text-ink " +
-  "transition-colors duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] " +
-  "focus-visible:outline-none focus-visible:bg-surface-paper focus-visible:ring-2 focus-visible:ring-accent-evergreen focus-visible:ring-offset-0 " +
-  "aria-[invalid=true]:border-2 aria-[invalid=true]:border-signal-danger motion-reduce:transition-none";
 
 type ToggleChipProps = {
   label: string;
@@ -240,7 +234,7 @@ export function PropertyForm({
             error={errors.propertyType?.message}
           >
             <div className="relative">
-              <select className={SELECT_CLS} {...register("propertyType")}>
+              <select className={SELECT_CLASS_NAME} {...register("propertyType")}>
                 {PROPERTY_TYPES.map((t) => (
                   <option key={t} value={t}>
                     {humanize(t)}
@@ -417,11 +411,7 @@ export function PropertyForm({
                       src={previewSrc}
                       alt=""
                       className="h-full w-full object-cover"
-                      onError={(event) => {
-                        const target = event.currentTarget;
-                        if (target.src.endsWith(PLACEHOLDER)) return;
-                        target.src = PLACEHOLDER;
-                      }}
+                      onError={onImageError}
                     />
                   </div>
                   <button

@@ -16,10 +16,7 @@ export default function SignInPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-surface-panel p-8">
       <form action={formAction} className="w-full max-w-sm space-y-4 rounded-lg border border-hairline bg-surface-paper p-6">
-        <div>
-          <h1 className="text-headline text-ink">Sign in</h1>
-          <p className="text-caption text-ink-soft">Phase 2 auth smoke test</p>
-        </div>
+        <h1 className="text-headline text-ink">Sign in</h1>
 
         <Field name="email" label="Email" error={state.errors?.email?.[0]}>
           <Input name="email" type="email" autoComplete="email" required />

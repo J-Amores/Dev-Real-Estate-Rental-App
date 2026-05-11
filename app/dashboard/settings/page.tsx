@@ -1,27 +1,24 @@
-import { redirect } from "next/navigation";
-
 import { SettingsForm } from "@/components/settings-form";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/signin");
+  const user = await requireUser();
 
   let initial: { name: string; email: string; phoneNumber: string } | null =
     null;
 
-  if (session.user.role === "tenant" && session.user.tenantId) {
+  if (user.role === "tenant" && user.tenantId) {
     const tenant = await prisma.tenant.findUnique({
-      where: { id: session.user.tenantId },
+      where: { id: user.tenantId },
       select: { name: true, email: true, phoneNumber: true },
     });
     if (tenant) initial = tenant;
-  } else if (session.user.role === "manager" && session.user.managerId) {
+  } else if (user.role === "manager" && user.managerId) {
     const manager = await prisma.manager.findUnique({
-      where: { id: session.user.managerId },
+      where: { id: user.managerId },
       select: { name: true, email: true, phoneNumber: true },
     });
     if (manager) initial = manager;
@@ -30,8 +27,8 @@ export default async function SettingsPage() {
   if (!initial) {
     return (
       <section className="max-w-xl">
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="mt-2 text-sm text-red-600">
+        <h1 className="text-headline text-ink">Settings</h1>
+        <p className="mt-2 text-caption text-signal-danger">
           Profile not found for this account.
         </p>
       </section>
@@ -41,9 +38,9 @@ export default async function SettingsPage() {
   return (
     <section className="max-w-xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="text-sm text-gray-500">
-          Update your {session.user.role} profile.
+        <h1 className="text-headline text-ink">Settings</h1>
+        <p className="text-caption text-ink-soft">
+          Update your {user.role} profile.
         </p>
       </header>
       <SettingsForm initial={initial} />

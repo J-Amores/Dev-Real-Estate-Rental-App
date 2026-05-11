@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { DeletePropertyButton } from "@/components/delete-property-button";
 import { PropertyForm } from "@/components/property-form";
 import { updatePropertyAction } from "@/lib/actions";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { PropertyInput } from "@/lib/schemas";
 
@@ -12,9 +12,8 @@ export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ id: string }> };
 
 export default async function EditPropertyPage({ params }: Params) {
-  const session = await auth();
-  if (!session?.user) redirect("/signin");
-  if (session.user.role !== "manager") redirect("/dashboard/favorites");
+  const user = await requireUser();
+  if (user.role !== "manager") redirect("/dashboard/favorites");
 
   const { id: idParam } = await params;
   const id = Number.parseInt(idParam, 10);
@@ -24,7 +23,7 @@ export default async function EditPropertyPage({ params }: Params) {
     where: { id },
     include: { location: true },
   });
-  if (!property || property.managerId !== session.user.id) notFound();
+  if (!property || property.managerId !== user.id) notFound();
 
   const defaults: Partial<PropertyInput> = {
     name: property.name,

@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authConfig } from "@/lib/auth.config";
@@ -65,3 +66,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
   },
 });
+
+/**
+ * Returns the signed-in user for a dashboard RSC, redirecting to /signin if missing.
+ * Use inside `app/dashboard/**` pages — the layout already gates auth, so this helper
+ * is purely for type narrowing and a uniform redirect target.
+ */
+export async function requireUser() {
+  const session = await auth();
+  if (!session?.user) redirect("/signin");
+  return session.user;
+}

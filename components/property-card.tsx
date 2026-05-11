@@ -6,15 +6,9 @@ import { DeletePropertyButton } from "@/components/delete-property-button";
 import { FavoriteButton } from "@/components/favorite-button";
 import { buttonClassName } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { priceFormatter } from "@/lib/format";
+import { PLACEHOLDER, onImageError } from "@/lib/images";
 import { humanize } from "@/lib/utils";
-
-const PLACEHOLDER = "/placeholder.jpg";
-
-const priceFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 type Variant = "public" | "owner";
 
@@ -51,11 +45,7 @@ export function PropertyCard({
         alt=""
         loading="lazy"
         className="h-full w-full object-cover"
-        onError={(event) => {
-          const target = event.currentTarget;
-          if (target.src.endsWith(PLACEHOLDER)) return;
-          target.src = PLACEHOLDER;
-        }}
+        onError={onImageError}
       />
       {variant === "public" && showFavorite && (
         <div className="absolute top-2 right-2 z-10">

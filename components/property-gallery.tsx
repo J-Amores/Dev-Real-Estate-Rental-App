@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const PLACEHOLDER = "/placeholder.jpg";
+import { PLACEHOLDER, onImageError } from "@/lib/images";
 
 type Props = {
   photoUrls: string[];
@@ -24,11 +24,7 @@ export function PropertyGallery({ photoUrls, altBase }: Props) {
           src={hero}
           alt={`${altBase} — photo ${safeIndex + 1}`}
           className="h-full w-full object-cover"
-          onError={(event) => {
-            const target = event.currentTarget;
-            if (target.src.endsWith(PLACEHOLDER)) return;
-            target.src = PLACEHOLDER;
-          }}
+          onError={onImageError}
         />
       </div>
 
@@ -56,11 +52,7 @@ export function PropertyGallery({ photoUrls, altBase }: Props) {
                   alt=""
                   loading="lazy"
                   className="h-full w-full object-cover"
-                  onError={(event) => {
-                    const target = event.currentTarget;
-                    if (target.src.endsWith(PLACEHOLDER)) return;
-                    target.src = PLACEHOLDER;
-                  }}
+                  onError={onImageError}
                 />
               </button>
             );

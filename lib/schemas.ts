@@ -6,8 +6,6 @@ export const profileSchema = z.object({
   phoneNumber: z.string().trim().max(30),
 });
 
-export type ProfileInput = z.infer<typeof profileSchema>;
-
 export const PROPERTY_TYPES = [
   "Apartment",
   "Villa",

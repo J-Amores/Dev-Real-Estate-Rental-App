@@ -1,6 +1,6 @@
 import * as React from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "ghost";
 
 const VARIANT: Record<Variant, string> = {
   primary:
@@ -9,8 +9,6 @@ const VARIANT: Record<Variant, string> = {
     "bg-surface-panel text-ink hover:bg-surface-sunk active:bg-surface-sunk px-4 py-[10px]",
   ghost:
     "bg-transparent text-ink-soft hover:bg-surface-sunk hover:text-ink active:bg-surface-sunk px-3 py-2",
-  danger:
-    "bg-signal-danger text-surface-paper hover:bg-signal-danger/90 active:bg-signal-danger/90 px-4 py-[10px]",
 };
 
 const BASE =

@@ -3,7 +3,7 @@ import { Prisma, type ApplicationStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { PROPERTY_TYPES } from "@/lib/schemas";
 
-export type PropertyDetail = {
+type PropertyDetail = {
   id: number;
   name: string;
   description: string;

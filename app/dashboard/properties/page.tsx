@@ -2,20 +2,20 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { EmptyState } from "@/components/empty-state";
+import { HouseIcon } from "@/components/icons";
 import { PropertyCard } from "@/components/property-card";
 import { buttonClassName } from "@/components/ui/button";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function PropertiesPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/signin");
-  if (session.user.role !== "manager") redirect("/dashboard/favorites");
+  const user = await requireUser();
+  if (user.role !== "manager") redirect("/dashboard/favorites");
 
   const properties = await prisma.property.findMany({
-    where: { managerId: session.user.id },
+    where: { managerId: user.id },
     select: {
       id: true,
       name: true,
@@ -30,22 +30,7 @@ export default async function PropertiesPage() {
   if (properties.length === 0) {
     return (
       <EmptyState
-        icon={
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-7 w-7"
-            aria-hidden
-          >
-            <path d="M3 21h18" />
-            <path d="M5 21V7l7-4 7 4v14" />
-            <path d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h.01M15 17h.01" />
-          </svg>
-        }
+        icon={<HouseIcon />}
         title="No properties yet"
         description="Add your first listing to start receiving applications from prospective tenants."
         cta={{ href: "/dashboard/properties/new", label: "Add a property" }}

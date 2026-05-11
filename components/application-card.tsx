@@ -5,19 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { updateApplicationStatusAction } from "@/lib/actions";
 import { APPLICATION_STATUS_COLOR } from "@/lib/application-status";
-
-const PLACEHOLDER = "/placeholder.jpg";
-
-const priceFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-});
+import { dateFormatter, priceFormatter } from "@/lib/format";
+import { PLACEHOLDER } from "@/lib/images";
 
 type ApplicationView = {
   id: number;

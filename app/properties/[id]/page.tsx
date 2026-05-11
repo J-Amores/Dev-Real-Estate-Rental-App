@@ -7,18 +7,15 @@ import { FavoriteButton } from "@/components/favorite-button";
 import { PropertyGallery } from "@/components/property-gallery";
 import { PropertyMap } from "@/components/property-map";
 import { buttonClassName } from "@/components/ui/button";
-import { APPLICATION_STATUS_COLOR } from "@/lib/application-status";
+import {
+  APPLICATION_STATUS_COLOR,
+  APPLICATION_STATUS_LABEL,
+} from "@/lib/application-status";
 import { auth } from "@/lib/auth";
+import { integerFormatter, priceFormatter } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getPropertyDetail, getTenantApplicationStatus } from "@/lib/queries";
 import { humanize } from "@/lib/utils";
-
-const priceFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-const integerFormatter = new Intl.NumberFormat("en-US");
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -37,7 +34,7 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
   if (!property) notFound();
 
   const isOwner =
-    session?.user?.id != null && String(session.user.id) === property.managerId;
+    session?.user?.id != null && session.user.id === property.managerId;
   const isTenant = tenantId != null;
 
   const applicationStatus =
@@ -111,11 +108,7 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
             <span
               className={`inline-flex items-center rounded-sm px-3 py-[10px] text-label font-medium tracking-[0.005em] ${APPLICATION_STATUS_COLOR[applicationStatus]}`}
             >
-              {applicationStatus === "Pending"
-                ? "Application pending"
-                : applicationStatus === "Approved"
-                  ? "Application approved"
-                  : "Application denied"}
+              {APPLICATION_STATUS_LABEL[applicationStatus]}
             </span>
           )}
           {isTenant && !applicationStatus && (

@@ -2,7 +2,7 @@ const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 const USER_AGENT =
   "Dev-Real-Estate-Rental-App/1.0 (+https://dev-real-estate-rental-app.vercel.app)";
 
-export type GeocodeInput = {
+type GeocodeInput = {
   address: string;
   city: string;
   state: string;
@@ -10,7 +10,7 @@ export type GeocodeInput = {
   country: string;
 };
 
-export type GeocodeResult = { lng: number; lat: number };
+type GeocodeResult = { lng: number; lat: number };
 
 export async function geocodeAddress(
   input: GeocodeInput,

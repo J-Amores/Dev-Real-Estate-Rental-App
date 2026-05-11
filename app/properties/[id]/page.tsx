@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DeletePropertyButton } from "@/components/delete-property-button";
+import { FavoriteButton } from "@/components/favorite-button";
 import { PropertyGallery } from "@/components/property-gallery";
 import { PropertyMap } from "@/components/property-map";
 import { buttonClassName } from "@/components/ui/button";
@@ -23,12 +24,18 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
   const id = Number(rawId);
   if (!Number.isInteger(id) || id <= 0) notFound();
 
-  const property = await getPropertyDetail(id);
+  const session = await auth();
+  const tenantId =
+    session?.user?.role === "tenant" && typeof session.user.tenantId === "number"
+      ? session.user.tenantId
+      : undefined;
+
+  const property = await getPropertyDetail(id, tenantId);
   if (!property) notFound();
 
-  const session = await auth();
   const isOwner =
     session?.user?.id != null && String(session.user.id) === property.managerId;
+  const isTenant = tenantId != null;
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -70,28 +77,23 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
             </span>
           </p>
         </div>
-        <div className="flex flex-col items-end gap-1.5">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              title="Saving is coming soon"
-              className={buttonClassName({ variant: "secondary" })}
-            >
-              ♡ Save
-            </button>
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              title="Applying is coming soon"
-              className={buttonClassName({ variant: "primary" })}
-            >
-              Apply
-            </button>
-          </div>
-          <p className="text-caption text-ink-faint">Applications open soon</p>
+        <div className="flex items-center gap-2">
+          {isTenant && (
+            <FavoriteButton
+              propertyId={property.id}
+              initialFavorited={property.isFavorited}
+              variant="detail"
+            />
+          )}
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            title="Applying is coming soon"
+            className={buttonClassName({ variant: "primary" })}
+          >
+            Apply
+          </button>
         </div>
       </header>
 

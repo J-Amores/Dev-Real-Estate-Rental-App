@@ -159,6 +159,20 @@ async function requireManager(): Promise<
   return { ok: true, userId: session.user.id };
 }
 
+async function requireTenant(): Promise<
+  | { ok: true; userId: string; tenantId: number }
+  | { ok: false; error: FormState }
+> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "tenant") {
+    return { ok: false, error: { errors: { _form: ["Not authorized"] } } };
+  }
+  if (typeof session.user.tenantId !== "number") {
+    return { ok: false, error: { errors: { _form: ["Tenant profile missing"] } } };
+  }
+  return { ok: true, userId: session.user.id, tenantId: session.user.tenantId };
+}
+
 function toPropertyData(v: PropertyInput) {
   return {
     name: v.name,
@@ -348,6 +362,50 @@ export async function searchAction(formData: FormData): Promise<void> {
 
   const query = params.toString();
   redirect(query ? `/search?${query}` : "/search");
+}
+
+export type ToggleFavoriteResult =
+  | { ok: true; isFavorited: boolean }
+  | { ok: false; error: FormState };
+
+export async function toggleFavoriteAction(
+  propertyId: number,
+): Promise<ToggleFavoriteResult> {
+  if (!Number.isInteger(propertyId) || propertyId <= 0) {
+    return { ok: false, error: { errors: { _form: ["Invalid property"] } } };
+  }
+
+  const gate = await requireTenant();
+  if (!gate.ok) return { ok: false, error: gate.error };
+
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId },
+    select: {
+      favoritedBy: {
+        where: { id: gate.tenantId },
+        select: { id: true },
+      },
+    },
+  });
+  if (!property) {
+    return { ok: false, error: { errors: { _form: ["Property not found"] } } };
+  }
+
+  const wasFavorited = property.favoritedBy.length > 0;
+  await prisma.property.update({
+    where: { id: propertyId },
+    data: {
+      favoritedBy: wasFavorited
+        ? { disconnect: { id: gate.tenantId } }
+        : { connect: { id: gate.tenantId } },
+    },
+  });
+
+  revalidatePath("/dashboard/favorites");
+  revalidatePath("/search");
+  revalidatePath(`/properties/${propertyId}`);
+
+  return { ok: true, isFavorited: !wasFavorited };
 }
 
 export async function deletePropertyAction(id: number): Promise<FormState> {

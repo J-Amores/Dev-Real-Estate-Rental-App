@@ -27,21 +27,36 @@ export type PropertyDetail = {
   postalCode: string;
   lat: number | null;
   lng: number | null;
+  isFavorited: boolean;
 };
 
-type Row = Omit<PropertyDetail, "pricePerMonth" | "baths" | "lat" | "lng"> & {
+type Row = Omit<
+  PropertyDetail,
+  "pricePerMonth" | "baths" | "lat" | "lng" | "isFavorited"
+> & {
   pricePerMonth: number | string;
   baths: number | string;
   lat: number | string | null;
   lng: number | string | null;
+  isFavorited: boolean | null;
 };
 
 /**
  * Reads a Property with its Location (coords lifted from PostGIS) and Manager (name + email).
  * Returns null when no row matches. Manager FK chain: Property.managerId → Manager.userId → User.id.
+ * When `tenantId` is provided, `isFavorited` reflects membership in the `_TenantFavorites`
+ * implicit M2M join (A = Property.id, B = Tenant.id).
  */
-export async function getPropertyDetail(id: number): Promise<PropertyDetail | null> {
+export async function getPropertyDetail(
+  id: number,
+  tenantId?: number,
+): Promise<PropertyDetail | null> {
   if (!Number.isInteger(id) || id <= 0) return null;
+
+  const favoritedExpr =
+    typeof tenantId === "number"
+      ? Prisma.sql`EXISTS (SELECT 1 FROM "_TenantFavorites" tf WHERE tf."A" = p.id AND tf."B" = ${tenantId})`
+      : Prisma.sql`FALSE`;
 
   const rows = await prisma.$queryRaw<Row[]>`
     SELECT
@@ -55,7 +70,8 @@ export async function getPropertyDetail(id: number): Promise<PropertyDetail | nu
       ST_X(l.coordinates::geometry) AS "lng",
       ST_Y(l.coordinates::geometry) AS "lat",
       m.name  AS "managerName",
-      m.email AS "managerEmail"
+      m.email AS "managerEmail",
+      ${favoritedExpr} AS "isFavorited"
     FROM "Property" p
     JOIN "Location" l ON l.id = p."locationId"
     JOIN "Manager"  m ON m."userId" = p."managerId"
@@ -71,6 +87,7 @@ export async function getPropertyDetail(id: number): Promise<PropertyDetail | nu
     baths: Number(r.baths),
     lat: r.lat == null ? null : Number(r.lat),
     lng: r.lng == null ? null : Number(r.lng),
+    isFavorited: r.isFavorited === true,
   };
 }
 

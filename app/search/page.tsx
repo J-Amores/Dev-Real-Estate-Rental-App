@@ -1,6 +1,8 @@
 import { Filters, type FilterValues } from "@/components/filters";
 import { Listings } from "@/components/listings";
 import { SearchMap } from "@/components/map";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import {
   searchProperties,
   type PropertyType,
@@ -64,6 +66,19 @@ export default async function SearchPage({
 
   const properties = await searchProperties(filters);
 
+  const session = await auth();
+  let favoriteIds: Set<number> | undefined;
+  if (
+    session?.user?.role === "tenant" &&
+    typeof session.user.tenantId === "number"
+  ) {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: session.user.tenantId },
+      select: { favorites: { select: { id: true } } },
+    });
+    favoriteIds = new Set(tenant?.favorites.map((f) => f.id) ?? []);
+  }
+
   return (
     <main className="flex min-h-screen flex-col bg-surface-paper">
       <header className="sticky top-0 z-20 border-b border-hairline bg-surface-paper">
@@ -84,7 +99,7 @@ export default async function SearchPage({
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr]">
-          <Listings properties={properties} />
+          <Listings properties={properties} favoriteIds={favoriteIds} />
 
           <aside className="h-[60vh] lg:h-auto lg:sticky lg:top-28">
             <div className="h-full lg:h-[calc(100vh-7.5rem)]">

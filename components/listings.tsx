@@ -3,9 +3,10 @@ import type { SearchResult } from "@/lib/queries";
 
 type Props = {
   properties: SearchResult[];
+  favoriteIds?: Set<number>;
 };
 
-export function Listings({ properties }: Props) {
+export function Listings({ properties, favoriteIds }: Props) {
   if (properties.length === 0) {
     return (
       <div className="flex flex-col items-start gap-2 rounded-lg border border-hairline bg-surface-paper p-6">
@@ -17,6 +18,8 @@ export function Listings({ properties }: Props) {
       </div>
     );
   }
+
+  const showFavorite = favoriteIds != null;
 
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-2">
@@ -30,6 +33,8 @@ export function Listings({ properties }: Props) {
             propertyType={p.propertyType}
             photoUrls={p.photoUrls}
             location={{ city: p.city, state: p.state }}
+            showFavorite={showFavorite}
+            isFavorited={favoriteIds?.has(p.id) ?? false}
           />
         </li>
       ))}

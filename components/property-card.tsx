@@ -15,6 +15,8 @@ const priceFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+type Variant = "public" | "owner";
+
 type Props = {
   id: number;
   name: string;
@@ -22,6 +24,7 @@ type Props = {
   propertyType: string;
   photoUrls: string[];
   location: { city: string; state: string };
+  variant?: Variant;
 };
 
 export function PropertyCard({
@@ -31,10 +34,12 @@ export function PropertyCard({
   propertyType,
   photoUrls,
   location,
+  variant = "owner",
 }: Props) {
   const cover = photoUrls[0] ?? PLACEHOLDER;
-  return (
-    <Card variant="listing" className="flex flex-col gap-3">
+
+  const body = (
+    <>
       <div className="relative aspect-[16/10] overflow-hidden rounded-photo bg-surface-sunk">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -69,6 +74,29 @@ export function PropertyCard({
           </span>
         </div>
       </div>
+    </>
+  );
+
+  if (variant === "public") {
+    return (
+      <Link
+        href={`/properties/${id}`}
+        aria-label={`${name}, ${priceFormatter.format(pricePerMonth)} per month in ${location.city}, ${location.state}`}
+        className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-evergreen focus-visible:ring-offset-2 focus-visible:ring-offset-surface-paper"
+      >
+        <Card
+          variant="listing"
+          className="flex flex-col gap-3 transition-colors duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:bg-surface-panel motion-reduce:transition-none"
+        >
+          {body}
+        </Card>
+      </Link>
+    );
+  }
+
+  return (
+    <Card variant="listing" className="flex flex-col gap-3">
+      {body}
 
       <div className="mt-auto flex items-center justify-end gap-1 border-t border-hairline pt-3">
         <Link

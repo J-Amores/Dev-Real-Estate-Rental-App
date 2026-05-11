@@ -45,7 +45,7 @@ export function PropertyGallery({ photoUrls, altBase }: Props) {
                 aria-label={`Show photo ${idx + 1}`}
                 onClick={() => setActiveIndex(idx)}
                 className={[
-                  "relative h-16 w-24 shrink-0 overflow-hidden rounded-xs bg-surface-sunk",
+                  "relative h-16 w-24 shrink-0 overflow-hidden rounded-sm bg-surface-sunk",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-evergreen focus-visible:ring-offset-2 focus-visible:ring-offset-surface-paper",
                   isActive ? "ring-2 ring-accent-evergreen ring-offset-2 ring-offset-surface-paper" : "opacity-80 hover:opacity-100",
                 ].join(" ")}

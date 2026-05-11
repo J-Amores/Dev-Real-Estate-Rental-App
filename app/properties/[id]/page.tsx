@@ -59,7 +59,7 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
       {/* Title block */}
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-display text-ink">{property.name}</h1>
+          <h1 className="text-headline text-ink">{property.name}</h1>
           <p className="text-body text-ink-soft tabular-nums">
             <span className="font-medium text-ink">
               {priceFormatter.format(property.pricePerMonth)} / mo
@@ -70,25 +70,28 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
             </span>
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="Saving is coming soon"
-            className={buttonClassName({ variant: "secondary" })}
-          >
-            ♡ Save
-          </button>
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="Applying is coming soon"
-            className={buttonClassName({ variant: "primary" })}
-          >
-            Apply
-          </button>
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              title="Saving is coming soon"
+              className={buttonClassName({ variant: "secondary" })}
+            >
+              ♡ Save
+            </button>
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              title="Applying is coming soon"
+              className={buttonClassName({ variant: "primary" })}
+            >
+              Apply
+            </button>
+          </div>
+          <p className="text-caption text-ink-faint">Applications open soon</p>
         </div>
       </header>
 
@@ -110,9 +113,9 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
       </ul>
 
       {/* Description */}
-      <section className="flex flex-col gap-2">
+      <section className="flex flex-col gap-3">
         <h2 className="text-title text-ink">About this property</h2>
-        <p className="text-body text-ink-soft whitespace-pre-line">
+        <p className="max-w-prose text-body text-ink-soft whitespace-pre-line">
           {property.description}
         </p>
       </section>

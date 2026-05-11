@@ -19,6 +19,11 @@ export async function geocodeAddress(
     .map((s) => s.trim())
     .filter(Boolean)
     .join(", ");
+  return geocodeText(q);
+}
+
+export async function geocodeText(query: string): Promise<GeocodeResult | null> {
+  const q = query.trim();
   if (!q) return null;
 
   const url = `${NOMINATIM_URL}?format=json&limit=1&q=${encodeURIComponent(q)}`;

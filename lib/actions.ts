@@ -7,9 +7,14 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { auth, signIn, signOut } from "@/lib/auth";
-import { geocodeAddress } from "@/lib/geocoding";
+import { geocodeAddress, geocodeText } from "@/lib/geocoding";
 import { prisma } from "@/lib/prisma";
-import { profileSchema, propertySchema, type PropertyInput } from "@/lib/schemas";
+import {
+  PROPERTY_TYPES,
+  profileSchema,
+  propertySchema,
+  type PropertyInput,
+} from "@/lib/schemas";
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -307,6 +312,42 @@ export async function updatePropertyAction(
   revalidatePath("/dashboard/properties");
   revalidatePath(`/dashboard/properties/${id}/edit`);
   redirect("/dashboard/properties");
+}
+
+export async function searchAction(formData: FormData): Promise<void> {
+  const params = new URLSearchParams();
+
+  const location = String(formData.get("location") ?? "").trim();
+  if (location) {
+    params.set("location", location);
+    const coords = await geocodeText(location);
+    if (coords) {
+      params.set("lat", coords.lat.toFixed(6));
+      params.set("lng", coords.lng.toFixed(6));
+    }
+  }
+
+  const numeric = (key: string) => {
+    const raw = String(formData.get(key) ?? "").trim();
+    if (!raw) return;
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0) params.set(key, String(n));
+  };
+  numeric("beds");
+  numeric("baths");
+  numeric("priceMin");
+  numeric("priceMax");
+
+  const propertyType = String(formData.get("propertyType") ?? "").trim();
+  if (
+    propertyType &&
+    (PROPERTY_TYPES as readonly string[]).includes(propertyType)
+  ) {
+    params.set("propertyType", propertyType);
+  }
+
+  const query = params.toString();
+  redirect(query ? `/search?${query}` : "/search");
 }
 
 export async function deletePropertyAction(id: number): Promise<FormState> {

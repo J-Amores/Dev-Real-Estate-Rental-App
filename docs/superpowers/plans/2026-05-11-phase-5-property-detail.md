@@ -728,9 +728,11 @@ Verify on `/properties/${OWNER_ID}`:
 
 - [ ] **Step 9: Smoke item 8 — token fallback**
 
-Stop the dev server. Temporarily edit `.env.local` to set `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=invalid`. Restart `npm run dev`. Visit `/properties/${OWNER_ID}`.
+Stop the dev server. Temporarily edit `.env.local` to set the token to an **empty value**: `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=`. The fallback path in `components/property-map.tsx` is gated on `Boolean(token)`, so any non-empty string (including the literal word `"invalid"`) is truthy and the component will try to mount Mapbox and fail with tile errors — that's NOT the fallback path. Empty string is the only value that exercises the fallback tile.
 
-Verify: page renders; map area shows "Map preview unavailable" fallback tile; no console errors.
+Restart `npm run dev`. Visit `/properties/${OWNER_ID}`.
+
+Verify: page renders; map area shows "Map preview unavailable" fallback tile; no console errors. (Programmatic check: `curl -s http://localhost:3000/properties/${OWNER_ID} | grep -c "Map preview unavailable"` should return at least 1.)
 
 Restore the real token. Restart dev server.
 

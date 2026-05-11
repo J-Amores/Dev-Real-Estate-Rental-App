@@ -245,6 +245,13 @@ If the work splits across sessions, intermediate commits use `Phase 5 - In Progr
 
 ## 11. After Phase 5
 
-Phase 6 lands the landing page (`app/page.tsx`) per master spec §8. Phase 7 builds
-`/search` and will reuse `lib/queries.ts` for the `$queryRaw` join pattern and
-`property-map.tsx` for the multi-marker map.
+Project numbering trails the master spec by one (project Phase 1 combined the spec's
+bootstrap + DB-setup phases). Master spec §14:
+
+- **Project Phase 6 = master spec Phase 7 — Search page.** Reuses `lib/queries.ts` for the
+  `$queryRaw` join pattern and `components/property-map.tsx` for the multi-marker map.
+- **Project Phase 7 = master spec Phase 8 — Favorites.** Wires the live Save toggle that
+  Phase 5 stubbed.
+- **Project Phase 8 = master spec Phase 9 — Applications.** Wires the live Apply form +
+  manager approval flow that Phase 5 stubbed.
+- **Project Phase 9 = master spec Phase 10 — Landing page** (`app/page.tsx`).

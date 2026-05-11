@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ApplyForm } from "@/components/apply-form";
 import { DeletePropertyButton } from "@/components/delete-property-button";
 import { FavoriteButton } from "@/components/favorite-button";
 import { PropertyGallery } from "@/components/property-gallery";
 import { PropertyMap } from "@/components/property-map";
 import { buttonClassName } from "@/components/ui/button";
+import { APPLICATION_STATUS_COLOR } from "@/lib/application-status";
 import { auth } from "@/lib/auth";
-import { getPropertyDetail } from "@/lib/queries";
+import { prisma } from "@/lib/prisma";
+import { getPropertyDetail, getTenantApplicationStatus } from "@/lib/queries";
 import { humanize } from "@/lib/utils";
 
 const priceFormatter = new Intl.NumberFormat("en-US", {
@@ -36,6 +39,25 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
   const isOwner =
     session?.user?.id != null && String(session.user.id) === property.managerId;
   const isTenant = tenantId != null;
+
+  const applicationStatus =
+    isTenant && session?.user?.id
+      ? await getTenantApplicationStatus(property.id, session.user.id)
+      : null;
+
+  const tenantDefaults =
+    isTenant && !applicationStatus && session?.user?.id
+      ? await prisma.tenant
+          .findUnique({
+            where: { userId: session.user.id },
+            select: { name: true, email: true, phoneNumber: true },
+          })
+          .then((t) =>
+            t
+              ? { name: t.name, email: t.email, phoneNumber: t.phoneNumber, message: "" }
+              : null,
+          )
+      : null;
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -85,15 +107,25 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
               variant="detail"
             />
           )}
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="Applying is coming soon"
-            className={buttonClassName({ variant: "primary" })}
-          >
-            Apply
-          </button>
+          {isTenant && applicationStatus && (
+            <span
+              className={`inline-flex items-center rounded-sm px-3 py-[10px] text-label font-medium tracking-[0.005em] ${APPLICATION_STATUS_COLOR[applicationStatus]}`}
+            >
+              {applicationStatus === "Pending"
+                ? "Application pending"
+                : applicationStatus === "Approved"
+                  ? "Application approved"
+                  : "Application denied"}
+            </span>
+          )}
+          {isTenant && !applicationStatus && (
+            <a
+              href="#apply"
+              className={buttonClassName({ variant: "primary" })}
+            >
+              Apply
+            </a>
+          )}
         </div>
       </header>
 
@@ -178,6 +210,13 @@ export default async function PropertyDetailPage({ params }: RouteParams) {
           </a>
         </p>
       </section>
+
+      {/* Apply form */}
+      {tenantDefaults && (
+        <section id="apply" className="scroll-mt-8">
+          <ApplyForm propertyId={property.id} defaults={tenantDefaults} />
+        </section>
+      )}
     </main>
   );
 }

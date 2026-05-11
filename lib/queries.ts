@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, type ApplicationStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { PROPERTY_TYPES } from "@/lib/schemas";
@@ -89,6 +89,31 @@ export async function getPropertyDetail(
     lng: r.lng == null ? null : Number(r.lng),
     isFavorited: r.isFavorited === true,
   };
+}
+
+/**
+ * Returns the most recent application status for `(propertyId, userId)`, or null.
+ * `userId` is `User.id` (cuid) — Application.tenantId references Tenant.userId, not Tenant.id.
+ * Used by /properties/[id] to gate the apply form: null → show form, non-null → show pill.
+ *
+ * "Most recent by applicationDate desc" is the correct gate because
+ * `createApplicationAction` rejects new applications when a Pending or Approved
+ * row already exists for `(propertyId, tenantId)`. Re-apply is only possible
+ * after a Denied row, so a newer Pending/Approved correctly shadows the old Denied.
+ */
+export async function getTenantApplicationStatus(
+  propertyId: number,
+  userId: string,
+): Promise<ApplicationStatus | null> {
+  if (!Number.isInteger(propertyId) || propertyId <= 0) return null;
+  if (!userId) return null;
+
+  const row = await prisma.application.findFirst({
+    where: { propertyId, tenantId: userId },
+    orderBy: { applicationDate: "desc" },
+    select: { status: true },
+  });
+  return row?.status ?? null;
 }
 
 export type PropertyType = (typeof PROPERTY_TYPES)[number];

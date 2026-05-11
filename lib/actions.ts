@@ -1,5 +1,6 @@
 "use server";
 
+import { ApplicationStatus } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -11,8 +12,10 @@ import { geocodeAddress, geocodeText } from "@/lib/geocoding";
 import { prisma } from "@/lib/prisma";
 import {
   PROPERTY_TYPES,
+  applicationSchema,
   profileSchema,
   propertySchema,
+  type ApplicationInput,
   type PropertyInput,
 } from "@/lib/schemas";
 
@@ -406,6 +409,135 @@ export async function toggleFavoriteAction(
   revalidatePath(`/properties/${propertyId}`);
 
   return { ok: true, isFavorited: !wasFavorited };
+}
+
+export async function createApplicationAction(
+  propertyId: number,
+  input: ApplicationInput,
+): Promise<FormState> {
+  if (!Number.isInteger(propertyId) || propertyId <= 0) {
+    return { errors: { _form: ["Invalid property"] } };
+  }
+
+  const gate = await requireTenant();
+  if (!gate.ok) return gate.error;
+
+  const parsed = applicationSchema.safeParse(input);
+  if (!parsed.success) {
+    return { errors: z.flattenError(parsed.error).fieldErrors };
+  }
+  const v = parsed.data;
+
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId },
+    select: { id: true },
+  });
+  if (!property) {
+    return { errors: { _form: ["Property not found"] } };
+  }
+
+  const existing = await prisma.application.findFirst({
+    where: {
+      propertyId,
+      tenantId: gate.userId,
+      status: { in: [ApplicationStatus.Pending, ApplicationStatus.Approved] },
+    },
+    select: { id: true, status: true },
+  });
+  if (existing) {
+    return {
+      errors: {
+        _form: [
+          existing.status === ApplicationStatus.Approved
+            ? "You've already been approved for this property."
+            : "You already have a pending application for this property.",
+        ],
+      },
+    };
+  }
+
+  await prisma.application.create({
+    data: {
+      propertyId,
+      tenantId: gate.userId,
+      applicationDate: new Date(),
+      status: ApplicationStatus.Pending,
+      name: v.name,
+      email: v.email,
+      phoneNumber: v.phoneNumber,
+      message: v.message?.length ? v.message : null,
+    },
+  });
+
+  revalidatePath("/dashboard/applications");
+  revalidatePath(`/properties/${propertyId}`);
+  return { message: "Application submitted" };
+}
+
+export async function updateApplicationStatusAction(
+  id: number,
+  formData: FormData,
+): Promise<void> {
+  if (!Number.isInteger(id) || id <= 0) return;
+
+  const status = String(formData.get("status") ?? "");
+  if (status !== "Approved" && status !== "Denied") return;
+
+  const gate = await requireManager();
+  if (!gate.ok) return;
+
+  const application = await prisma.application.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      status: true,
+      tenantId: true,
+      propertyId: true,
+      property: {
+        select: {
+          managerId: true,
+          pricePerMonth: true,
+          securityDeposit: true,
+        },
+      },
+    },
+  });
+  if (!application || application.property.managerId !== gate.userId) return;
+  if (application.status !== ApplicationStatus.Pending) return;
+
+  if (status === "Denied") {
+    await prisma.application.update({
+      where: { id },
+      data: { status: ApplicationStatus.Denied },
+    });
+  } else {
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setFullYear(endDate.getFullYear() + 1);
+
+    await prisma.$transaction(async (tx) => {
+      const lease = await tx.lease.create({
+        data: {
+          propertyId: application.propertyId,
+          tenantId: application.tenantId,
+          startDate,
+          endDate,
+          rent: application.property.pricePerMonth,
+          deposit: application.property.securityDeposit,
+        },
+        select: { id: true },
+      });
+      await tx.application.update({
+        where: { id },
+        data: {
+          status: ApplicationStatus.Approved,
+          leaseId: lease.id,
+        },
+      });
+    });
+  }
+
+  revalidatePath("/dashboard/applications");
 }
 
 export async function deletePropertyAction(id: number): Promise<FormState> {

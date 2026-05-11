@@ -77,3 +77,12 @@ export const propertySchema = z.object({
 });
 
 export type PropertyInput = z.infer<typeof propertySchema>;
+
+export const applicationSchema = z.object({
+  name: z.string().trim().min(1, "Required").max(120),
+  email: z.string().trim().email(),
+  phoneNumber: z.string().trim().min(1, "Required").max(30),
+  message: z.string().trim().max(1000, "Up to 1000 characters").optional(),
+});
+
+export type ApplicationInput = z.infer<typeof applicationSchema>;

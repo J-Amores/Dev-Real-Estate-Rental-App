@@ -148,6 +148,12 @@ components:
     rounded: "{rounded.sm}"
     padding: "8px 12px"
     typography: "{typography.label}"
+  polaroid-marker:
+    backgroundColor: "{colors.surface-paper}"
+    textColor: "{colors.ink-soft}"
+    rounded: "0px"
+    padding: "6px 6px 24px"
+    typography: "{typography.caption}"
 ---
 
 # Design System: Real Estate Marketplace
@@ -167,6 +173,7 @@ What this is not: the navy-and-orange of legacy property-management SaaS, the ba
 - **Mixed shape language.** Tight 6–8px corners on inputs and buttons; soft 14–16px on cards and photo crops. Forms feel precise; surfaces feel hospitable.
 - **Flat by default.** Depth comes from tonal layering between Cream Paper, Warm Panel, and Sunk Surface. Shadows appear only on overlays.
 - **Inter, monoculture.** One typeface, full weight range, tabular numerics on every column of numbers.
+- **Brand surfaces have permission.** Marketing pages (landing, future campaign pages) may exceed dashboard restraint with first-paint reveals (`duration-hero`) and the sharp-cornered Polaroid pattern. The dashboard never inherits these.
 
 ## 2. Colors: The Hospitable Operator Palette
 
@@ -234,6 +241,7 @@ The system is **flat by default**. Depth comes from tonal layering, three steps 
 - **Hairline Edge** (`box-shadow: 0 0 0 1px oklch(20% 0.012 160 / 0.08), 0 1px 0 oklch(20% 0.012 160 / 0.04)`): Used on raised cards in dense lists where tonal layering alone is not enough. Subtle outline plus a 1px ground line; reads as a held element, not a floating one.
 - **Floating** (`box-shadow: 0 12px 28px oklch(20% 0.012 160 / 0.08), 0 2px 6px oklch(20% 0.012 160 / 0.06)`): Dropdowns, popovers, autocomplete menus, sticky toolbar shadows that appear on scroll.
 - **Modal** (`box-shadow: 0 24px 64px oklch(20% 0.012 160 / 0.18), 0 4px 12px oklch(20% 0.012 160 / 0.10)`): Modals only. And modals are the lazy answer; exhaust inline alternatives first.
+- **Polaroid** (`box-shadow: 0 1px 2px oklch(20% 0.012 160 / 0.06), 0 4px 12px oklch(20% 0.012 160 / 0.08)`): Brand-surface only. Print-edge cards held above the beige globe surface; softer than Floating, never used on overlays.
 
 ### Named Rules
 
@@ -289,6 +297,12 @@ The system is **flat by default**. Depth comes from tonal layering, three steps 
 ### Property Listing (signature component)
 
 The listing card is the system's centerpiece. Photo (16:10 crop, 16px radius), then title (Title typography), then a single metadata row (price tabular-numeric, separator dot, neighborhood), then a chip row (3 amenity chips max, +N overflow), then the action zone (Edit + Delete on manager surface, Favorite + Apply on tenant surface). Photos load through `next/image`; broken photos swap to `/placeholder.jpg` via `<img onError>`. The chrome around the photo recedes; the photo wins.
+
+### Polaroid marker (brand surface only)
+
+The single sharp-edged component in the system. A small `<a>`-wrapped photo + caption used on the landing globe to preview cities, tilted ±8°. Print-edge intentional: `border-radius: 0`, 1px Hairline Divider border, Polaroid shadow. Image and frame are flush; no inner radius, no inner padding around the photo on the print side. Caption uses Caption typography in Soft Ink. Hover: `transform: scale(1.05)` over 120ms `ease-out-quart`, disabled under `prefers-reduced-motion`. Focus: 2px Hospitable Evergreen ring at 4px offset (the tilt forces a wider offset to clear the rotated edge). Minimum 48×48 touch target on the `<a>` wrapper.
+
+Reserved for brand surfaces (landing, future campaign pages); never used on product surfaces where the mixed-corner rule applies.
 
 ## 6. Do's and Don'ts
 

@@ -134,7 +134,7 @@ export default function LandingPage() {
 |---|---|---|
 | `dark` | `0` | Light theme |
 | `baseColor` | `[0.96, 0.95, 0.93]` | `surface-panel` oklch(95% 0.006 90) |
-| `markerColor` | `[0.13, 0.40, 0.30]` | `accent-evergreen` oklch(38% 0.08 165) — dots only, well under 10% of viewport |
+| `markerColor` | `[0.13, 0.40, 0.30]` | `accent-evergreen` oklch(38% 0.08 165), darkened from literal sRGB for dot-density legibility on the beige sphere. See `DESIGN.json extensions.cobe.markerColor`. |
 | `glowColor` | `[0.91, 0.95, 0.93]` | `accent-evergreen-soft` oklch(94% 0.02 165) |
 | `diffuse` | `1.2` | Softer / matte vs ref 1.5 |
 | `mapBrightness` | `6` | Tuned for warm beige base; ref 9 oversaturates |
@@ -148,13 +148,13 @@ export default function LandingPage() {
 |---|---|
 | Background | `var(--color-surface-paper)` |
 | Padding | `6px 6px 24px` desktop / `4px 4px 18px` mobile |
-| Shadow | `0 1px 2px oklch(20% 0.012 160 / 0.06), 0 4px 12px oklch(20% 0.012 160 / 0.08)` |
-| Border | `1px solid var(--color-hairline)` |
+| Shadow | `var(--shadow-polaroid)` (`0 1px 2px oklch(20% 0.012 160 / 0.06), 0 4px 12px oklch(20% 0.012 160 / 0.08)`); see DESIGN.md §4 |
+| Border | `1px solid var(--color-divider)` |
 | Border-radius | `0` — deliberate sharp print edge |
 | Image | `60×60` desktop / `48×48` mobile, `object-cover`, no radius |
 | Caption | `text-caption` token, `color: var(--color-ink-soft)`, inherits `cv11 ss03 tnum` features |
 | Rotation | `-8°..+8°` per marker via `transform: rotate(...)` |
-| Hover | `scale(1.05)` over 150ms ease-out, disabled in reduced-motion |
+| Hover | `scale(1.05)` over 120ms `ease-out-quart` (`cubic-bezier(0.32, 0.72, 0, 1)`), disabled in reduced-motion |
 | Focus | `outline: 2px solid var(--color-accent-evergreen); outline-offset: 4px` |
 | Touch target | `min-width: 48px; min-height: 48px` on `<a>` wrapper |
 
@@ -196,7 +196,7 @@ Touch:
 - Globe auto-rotates `phi += 0.003` per `requestAnimationFrame`.
 - Drag-to-rotate via pointer events (ref-preserved verbatim).
 - Polaroid visibility driven by cobe-written CSS custom prop `--cobe-visible-<id>` (0..1). Polaroid `opacity` + `filter: blur(8px)` interpolate per `transition: opacity 0.3s, filter 0.3s`.
-- Canvas first paint: `opacity 0 → 1` over 1.2s ease.
+- Canvas first paint: `opacity 0 → 1` over `duration-hero` (1200ms) ease.
 - Polaroid hover: `transform: scale(1.05)` 150ms ease-out.
 
 ### Reduced (`prefers-reduced-motion: reduce`)
@@ -267,7 +267,7 @@ Cobe double-init guard preserved (`if (width === 0 || globe) return`). Cleanup r
 ## 11. Open issues (flagged for reviewer)
 
 1. **No sign-in / sign-up surface on `/`.** Manager and tenant funnel both require knowing direct URLs (`/signin`, `/signup`). Accept for this spec; revisit in Phase 11 when DB-backed markers arrive.
-2. **No host conversion CTA.** `PRODUCT.md` strategic principle #4 (host growth) loses its primary surface. Same revisit window as #1.
+2. **No host conversion CTA.** Removes the only public surface where a small-scale host could encounter the product. `PRODUCT.md` doesn't currently name host acquisition as a strategic principle. Managers are primary user, but no principle mandates a host-funnel surface. Tracked as Phase 11 gap, not a current principle violation. Same revisit window as #1.
 3. **No footer / legal links.** Once Terms / Privacy pages exist, footer must return — likely launch-blocker for public deploy. Track in Phase 12.
 4. **No returning-user dashboard link.** Logged-in user landing on `/` has no visible path to their dashboard. Direct URL works.
 5. **CSS Anchor Positioning compat.** Chrome 125+, Safari 26+, Firefox flag-gated. Firefox users get inline-stacked polaroids beneath globe — graceful degradation, but visually less rich. Document in spec; accept.

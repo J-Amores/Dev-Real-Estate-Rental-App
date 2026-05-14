@@ -211,12 +211,14 @@
     "shadows": [
       { "name": "hairline-edge", "value": "0 0 0 1px oklch(20% 0.012 160 / 0.08), 0 1px 0 oklch(20% 0.012 160 / 0.04)", "purpose": "Held-element outline on raised cards in dense lists." },
       { "name": "floating", "value": "0 12px 28px oklch(20% 0.012 160 / 0.08), 0 2px 6px oklch(20% 0.012 160 / 0.06)", "purpose": "Dropdowns, popovers, autocomplete menus, sticky toolbars on scroll." },
-      { "name": "modal", "value": "0 24px 64px oklch(20% 0.012 160 / 0.18), 0 4px 12px oklch(20% 0.012 160 / 0.10)", "purpose": "Modals only. Modals are the lazy answer; exhaust inline alternatives first." }
+      { "name": "modal", "value": "0 24px 64px oklch(20% 0.012 160 / 0.18), 0 4px 12px oklch(20% 0.012 160 / 0.10)", "purpose": "Modals only. Modals are the lazy answer; exhaust inline alternatives first." },
+      { "name": "polaroid", "value": "0 1px 2px oklch(20% 0.012 160 / 0.06), 0 4px 12px oklch(20% 0.012 160 / 0.08)", "purpose": "Brand-surface print-edge cards (landing globe polaroids). Softer than floating, never on overlays." }
     ],
     "motion": [
       { "name": "duration-fast", "value": "120ms", "purpose": "Hover and small state changes (nav items, table-row tinting)." },
       { "name": "duration-base", "value": "200ms", "purpose": "Default for color and opacity transitions on buttons, inputs, links." },
       { "name": "duration-slow", "value": "320ms", "purpose": "Larger transitions (sheet slide-in, panel reveal)." },
+      { "name": "duration-hero", "value": "1200ms", "purpose": "Brand-surface first-paint reveals only (e.g. landing globe canvas fade-in). Forbidden on product surfaces." },
       { "name": "ease-out-quart", "value": "cubic-bezier(0.32, 0.72, 0, 1)", "purpose": "Standard easing for every transition. No bounce, no elastic." }
     ],
     "breakpoints": [
@@ -224,7 +226,16 @@
       { "name": "md", "value": "768px" },
       { "name": "lg", "value": "1024px" },
       { "name": "xl", "value": "1280px" }
-    ]
+    ],
+    "cobe": {
+      "purpose": "WebGL globe parameters for the landing surface. RGB triples normalized to 0..1 for the cobe library; literal sRGB conversions of design tokens, hand-tuned for WebGL output.",
+      "baseColor":   { "rgb": [0.96, 0.95, 0.93], "derivedFrom": "surface-panel",         "note": "Approximate sRGB of oklch(95% 0.006 90)." },
+      "markerColor": { "rgb": [0.13, 0.40, 0.30], "derivedFrom": "accent-evergreen",      "note": "Deeper than literal accent-evergreen sRGB; tuned for dot-density legibility on a beige sphere." },
+      "glowColor":   { "rgb": [0.91, 0.95, 0.93], "derivedFrom": "accent-evergreen-soft", "note": "Approximate sRGB of oklch(94% 0.02 165)." },
+      "diffuse": 1.2,
+      "mapBrightness": 6,
+      "mapSamples": 16000
+    }
   },
   "components": [
     {
@@ -274,6 +285,14 @@
       "description": "Application or listing approved. Color plus icon — never color alone.",
       "html": "<span class=\"ds-chip-approved\"><svg class=\"ds-chip-icon\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 8.5l3 3 7-7\" /></svg>Approved</span>",
       "css": ".ds-chip-approved { display: inline-flex; align-items: center; gap: 4px; background: oklch(94% 0.02 165); color: oklch(30% 0.08 165); border-radius: 4px; padding: 4px 8px; font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: 0.005em; } .ds-chip-icon { width: 12px; height: 12px; }"
+    },
+    {
+      "name": "Polaroid Marker",
+      "kind": "marker",
+      "refersTo": "polaroid-marker",
+      "description": "Sharp-cornered photo card with caption + rotation, used on the landing globe and any future place-marker brand surface. Print-edge intentional. Brand surface only.",
+      "html": "<a class=\"ds-polaroid\" href=\"/search?location=Lisbon\" aria-label=\"Browse rentals in Lisbon\"><img src=\"/landing-globe/lisbon.jpg\" alt=\"\" width=\"60\" height=\"60\"/><span class=\"ds-polaroid-caption\">Lisbon</span></a>",
+      "css": ".ds-polaroid { display: inline-flex; flex-direction: column; gap: 6px; padding: 6px 6px 24px; background: oklch(98% 0.004 100); border: 1px solid oklch(88% 0.008 90); border-radius: 0; box-shadow: 0 1px 2px oklch(20% 0.012 160 / 0.06), 0 4px 12px oklch(20% 0.012 160 / 0.08); transform: rotate(-4deg); transition: transform 120ms cubic-bezier(0.32, 0.72, 0, 1); min-width: 48px; min-height: 48px; box-sizing: border-box; align-items: center; text-decoration: none; } .ds-polaroid:hover { transform: rotate(-4deg) scale(1.05); } .ds-polaroid:focus-visible { outline: 2px solid oklch(38% 0.08 165); outline-offset: 4px; } @media (prefers-reduced-motion: reduce) { .ds-polaroid, .ds-polaroid:hover { transition: none; transform: rotate(-4deg); } } .ds-polaroid img { width: 60px; height: 60px; object-fit: cover; border-radius: 0; display: block; } .ds-polaroid-caption { font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 12px; line-height: 1.4; letter-spacing: 0.005em; color: oklch(38% 0.012 160); text-align: center; }"
     }
   ],
   "narrative": {

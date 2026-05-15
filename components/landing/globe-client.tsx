@@ -83,13 +83,19 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
     let phi = 0;
 
     function init() {
-      const width = canvas.offsetWidth;
-      if (width === 0 || globe) return;
+      const cssWidth = canvas.offsetWidth;
+      if (cssWidth === 0 || globe) return;
+
+      // cobe's shader normalizes gl_FragCoord (buffer pixels) by the `w` uniform,
+      // which it sets from these width/height props. To render the sphere centered
+      // and full-size, pass buffer dimensions (CSS × devicePixelRatio), not CSS.
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const bufferWidth = cssWidth * dpr;
 
       globe = createGlobe(canvas, {
-        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-        width,
-        height: width,
+        devicePixelRatio: dpr,
+        width: bufferWidth,
+        height: bufferWidth,
         phi: 0,
         theta: 0.2,
         dark: 0,
@@ -172,15 +178,16 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
   }, [markers, speed]);
 
   return (
-    <div className="relative aspect-square h-full w-full select-none">
+    <div className="relative aspect-square w-full select-none">
       <canvas
         ref={canvasRef}
         role="img"
         aria-label="Interactive globe showing rental locations in six cities"
         onPointerDown={handlePointerDown}
         style={{
+          display: "block",
           width: "100%",
-          height: "100%",
+          aspectRatio: "1 / 1",
           cursor: "grab",
           opacity: 0,
           transition: "opacity 1200ms ease",

@@ -37,12 +37,13 @@ function GlobeMarker({ marker }: { marker: PolaroidMarker }) {
  */
 export function GlobeStatic() {
   return (
-    <div className="relative h-full w-full">
+    <div className="relative aspect-square w-full">
       <svg
         role="img"
         aria-label="Globe showing rental locations in six cities"
         viewBox="0 0 100 100"
-        className="h-full w-full"
+        className="block w-full"
+        style={{ aspectRatio: "1 / 1" }}
       >
         <defs>
           <pattern

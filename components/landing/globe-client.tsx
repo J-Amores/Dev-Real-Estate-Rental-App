@@ -154,6 +154,19 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
           <PolaroidLink marker={m} withVisibilityProps />
         </div>
       ))}
+
+      <ul className="sm:hidden absolute left-0 right-0 -bottom-12 flex flex-wrap justify-center gap-x-3 gap-y-1 text-caption text-ink-soft">
+        {markers.map((m) => (
+          <li key={m.id}>
+            <a
+              href={m.href}
+              className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-accent-evergreen focus-visible:outline-offset-2"
+            >
+              {m.caption}
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

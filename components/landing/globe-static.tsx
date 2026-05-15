@@ -6,28 +6,21 @@ const DOT_PATTERN_ID = "landing-globe-dots";
 const CLIP_ID = "landing-globe-clip";
 
 /**
- * Project [lat, lng] to 0..1 x/y over the bounding box of the visible hemisphere.
- * Returns null for points behind the sphere at phi=0 so the caller can skip them.
+ * Equirectangular projection of [lat, lng] across the full 0..1 x/y bounding box.
+ * The static fallback never rotates, so all 6 markers render simultaneously.
  */
-function projectVisible(
-  lat: number,
-  lng: number,
-): { x: number; y: number } | null {
-  if (Math.abs(lng) > 100) return null;
-  const x = (lng + 100) / 200;
-  const y = (90 - lat) / 180;
-  return { x, y };
+function project(lat: number, lng: number): { x: number; y: number } {
+  return { x: (lng + 180) / 360, y: (90 - lat) / 180 };
 }
 
 function GlobeMarker({ marker }: { marker: PolaroidMarker }) {
-  const projected = projectVisible(marker.location[0], marker.location[1]);
-  if (!projected) return null;
+  const { x, y } = project(marker.location[0], marker.location[1]);
   return (
     <div
       className="hidden sm:block absolute pointer-events-auto"
       style={{
-        left: `${projected.x * 100}%`,
-        top: `${projected.y * 100}%`,
+        left: `${x * 100}%`,
+        top: `${y * 100}%`,
         transform: "translate(-50%, -110%)",
       }}
     >

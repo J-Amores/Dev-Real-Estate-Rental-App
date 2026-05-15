@@ -101,7 +101,7 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
         glowColor: [0.91, 0.95, 0.93],
         markers: markers.map((m) => ({
           location: m.location,
-          size: 0.02,
+          size: 0.05,
         })),
         onRender: (state) => {
           if (!isPausedRef.current) phi += speed;
@@ -111,8 +111,9 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
           state.phi = currentPhi;
           state.theta = currentTheta;
 
-          // Same projection cobe uses internally: rotate around Y by phi, then
-          // tilt around X by theta. Front hemisphere is z >= 0.
+          // Match cobe's exact world→screen projection (derived from its
+          // fragment shader). Sphere has NDC radius 0.8, so pixel coords use
+          // half * 0.8 as the scale factor.
           const half = canvas.offsetWidth / 2;
           const cosT = Math.cos(currentTheta);
           const sinT = Math.sin(currentTheta);
@@ -122,19 +123,20 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
             if (!el) continue;
             const lat = (m.location[0] * Math.PI) / 180;
             const lng = (m.location[1] * Math.PI) / 180;
-            const dLng = lng - currentPhi;
-            const sx = Math.cos(lat) * Math.sin(dLng);
-            const py0 = Math.sin(lat);
-            const pz0 = Math.cos(lat) * Math.cos(dLng);
-            const sy = py0 * cosT - pz0 * sinT;
-            const sz = py0 * sinT + pz0 * cosT;
+            const cosLat = Math.cos(lat);
+            const sinLat = Math.sin(lat);
+            const angle = lng + currentPhi;
+            const cosA = Math.cos(angle);
+            const sinA = Math.sin(angle);
 
-            // 0.95 inset matches cobe's effective sphere radius vs. canvas edge.
-            const px = half + sx * half * 0.95;
-            const pyPx = half - sy * half * 0.95;
+            const lx = cosLat * cosA;
+            const ly = cosT * sinLat + sinT * cosLat * sinA;
+            const lz = sinT * sinLat - cosT * cosLat * sinA;
 
-            // Fade to 0 over the back hemisphere; full opacity once z >= 0.3.
-            const visibility = Math.max(0, Math.min(1, sz / 0.3));
+            const px = half + lx * 0.8 * half;
+            const pyPx = half - ly * 0.8 * half;
+
+            const visibility = Math.max(0, Math.min(1, lz / 0.3));
 
             el.style.transform = `translate3d(${px}px, ${pyPx}px, 0) translate(-50%, -100%)`;
             el.style.opacity = "1";
@@ -190,7 +192,7 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
         <div
           key={m.id}
           ref={setPolaroidRef(m.id)}
-          className="hidden sm:block absolute pointer-events-auto"
+          className="hidden sm:flex absolute pointer-events-none flex-col items-center"
           style={{
             top: 0,
             left: 0,
@@ -198,7 +200,20 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
             willChange: "transform, opacity",
           }}
         >
-          <PolaroidLink marker={m} withVisibilityProps />
+          <div className="pointer-events-auto">
+            <PolaroidLink marker={m} withVisibilityProps />
+          </div>
+          <span
+            aria-hidden="true"
+            style={{
+              display: "block",
+              width: "1px",
+              height: "28px",
+              marginTop: "2px",
+              background: "var(--color-hairline)",
+              opacity: `var(--cobe-visible-${m.id}, 0)`,
+            }}
+          />
         </div>
       ))}
 

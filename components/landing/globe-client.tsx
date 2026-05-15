@@ -14,17 +14,28 @@ type Props = {
 };
 
 /**
- * Cobe-driven WebGL globe with CSS-Anchor-Positioned polaroid overlays. Mounted only
- * when motion is allowed. Pauses requestAnimationFrame while the tab is hidden.
- * Pointer-drag pauses auto-rotate; pointer-up commits the drag offset.
+ * Cobe-driven WebGL globe with polaroid overlays positioned each frame from the
+ * same lat/lng → screen projection cobe uses internally. CSS Anchor Positioning
+ * cannot work here because cobe paints markers as canvas pixels, not DOM nodes.
+ * Pauses requestAnimationFrame while the tab is hidden. Pointer-drag pauses
+ * auto-rotate; pointer-up commits the drag offset.
  */
 export function GlobeClient({ markers, speed = 0.003 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const polaroidRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const pointerInteracting = useRef<{ x: number; y: number } | null>(null);
   const dragOffset = useRef({ phi: 0, theta: 0 });
   const phiOffsetRef = useRef(0);
   const thetaOffsetRef = useRef(0);
   const isPausedRef = useRef(false);
+
+  const setPolaroidRef = useCallback(
+    (id: string) => (el: HTMLDivElement | null) => {
+      if (el) polaroidRefs.current.set(id, el);
+      else polaroidRefs.current.delete(id);
+    },
+    [],
+  );
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     pointerInteracting.current = { x: e.clientX, y: e.clientY };
@@ -94,8 +105,44 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
         })),
         onRender: (state) => {
           if (!isPausedRef.current) phi += speed;
-          state.phi = phi + phiOffsetRef.current + dragOffset.current.phi;
-          state.theta = 0.2 + thetaOffsetRef.current + dragOffset.current.theta;
+          const currentPhi = phi + phiOffsetRef.current + dragOffset.current.phi;
+          const currentTheta =
+            0.2 + thetaOffsetRef.current + dragOffset.current.theta;
+          state.phi = currentPhi;
+          state.theta = currentTheta;
+
+          // Same projection cobe uses internally: rotate around Y by phi, then
+          // tilt around X by theta. Front hemisphere is z >= 0.
+          const half = canvas.offsetWidth / 2;
+          const cosT = Math.cos(currentTheta);
+          const sinT = Math.sin(currentTheta);
+
+          for (const m of markers) {
+            const el = polaroidRefs.current.get(m.id);
+            if (!el) continue;
+            const lat = (m.location[0] * Math.PI) / 180;
+            const lng = (m.location[1] * Math.PI) / 180;
+            const dLng = lng - currentPhi;
+            const sx = Math.cos(lat) * Math.sin(dLng);
+            const py0 = Math.sin(lat);
+            const pz0 = Math.cos(lat) * Math.cos(dLng);
+            const sy = py0 * cosT - pz0 * sinT;
+            const sz = py0 * sinT + pz0 * cosT;
+
+            // 0.95 inset matches cobe's effective sphere radius vs. canvas edge.
+            const px = half + sx * half * 0.95;
+            const pyPx = half - sy * half * 0.95;
+
+            // Fade to 0 over the back hemisphere; full opacity once z >= 0.3.
+            const visibility = Math.max(0, Math.min(1, sz / 0.3));
+
+            el.style.transform = `translate3d(${px}px, ${pyPx}px, 0) translate(-50%, -100%)`;
+            el.style.opacity = "1";
+            el.style.setProperty(
+              `--cobe-visible-${m.id}`,
+              String(visibility),
+            );
+          }
         },
       });
 
@@ -142,13 +189,13 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
       {markers.map((m) => (
         <div
           key={m.id}
+          ref={setPolaroidRef(m.id)}
           className="hidden sm:block absolute pointer-events-auto"
           style={{
-            positionAnchor: `--cobe-${m.id}`,
-            bottom: "anchor(top)",
-            left: "anchor(center)",
-            translate: "-50% 0",
-            marginBottom: 8,
+            top: 0,
+            left: 0,
+            opacity: 0,
+            willChange: "transform, opacity",
           }}
         >
           <PolaroidLink marker={m} withVisibilityProps />

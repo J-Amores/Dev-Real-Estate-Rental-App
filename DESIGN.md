@@ -173,7 +173,7 @@ What this is not: the navy-and-orange of legacy property-management SaaS, the ba
 - **Mixed shape language.** Tight 6–8px corners on inputs and buttons; soft 14–16px on cards and photo crops. Forms feel precise; surfaces feel hospitable.
 - **Flat by default.** Depth comes from tonal layering between Cream Paper, Warm Panel, and Sunk Surface. Shadows appear only on overlays.
 - **Inter, monoculture.** One typeface, full weight range, tabular numerics on every column of numbers.
-- **Brand surfaces have permission.** Marketing pages (landing, future campaign pages) may exceed dashboard restraint with first-paint reveals (`duration-hero`) and the sharp-cornered Polaroid pattern. The dashboard never inherits these.
+- **Brand surfaces have permission.** Marketing pages (landing, future campaign pages) and auth-gate surfaces (`/signin`, `/signup`) may exceed dashboard restraint with first-paint reveals (`duration-hero`) and the sharp-cornered Polaroid pattern. The dashboard never inherits these.
 
 ## 2. Colors: The Hospitable Operator Palette
 
@@ -302,7 +302,7 @@ The listing card is the system's centerpiece. Photo (16:10 crop, 16px radius), t
 
 The single sharp-edged component in the system. A small `<a>`-wrapped photo + caption used on the landing globe to preview cities, tilted ±8°. Print-edge intentional: `border-radius: 0`, 1px Hairline Divider border, Polaroid shadow. Image and frame are flush; no inner radius, no inner padding around the photo on the print side. Caption uses Caption typography in Soft Ink. Hover: `transform: scale(1.05)` over 120ms `ease-out-quart`, disabled under `prefers-reduced-motion`. Focus: 2px Hospitable Evergreen ring at 4px offset (the tilt forces a wider offset to clear the rotated edge). Minimum 48×48 touch target on the `<a>` wrapper.
 
-Reserved for brand surfaces (landing, future campaign pages); never used on product surfaces where the mixed-corner rule applies.
+Reserved for brand surfaces (landing, auth-gate pages, future campaign pages); never used on product surfaces where the mixed-corner rule applies.
 
 ## 6. Do's and Don'ts
 

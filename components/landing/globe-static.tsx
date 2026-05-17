@@ -24,7 +24,7 @@ function GlobeMarker({ marker }: { marker: PolaroidMarker }) {
         transform: "translate(-50%, -110%)",
       }}
     >
-      <PolaroidLink marker={marker} />
+      <PolaroidLink marker={marker} hrefOverride={`/signin?city=${marker.id}`} />
     </div>
   );
 }
@@ -78,7 +78,7 @@ export function GlobeStatic() {
         {LANDING_MARKERS.map((m) => (
           <li key={m.id}>
             <a
-              href={m.href}
+              href={`/signin?city=${m.id}`}
               className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-accent-evergreen focus-visible:outline-offset-2"
             >
               {m.caption}

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { GlobeOrFallback } from "@/components/landing/globe-or-fallback";
+import { LandingCtaChip } from "@/components/landing/landing-cta-chip";
 import { LANDING_MARKERS } from "@/lib/landing-markers";
+import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Real Estate App",
@@ -9,19 +12,16 @@ export const metadata: Metadata = {
     "Find a calmer place to rent. Real homes from small-scale hosts in cities around the world.",
 };
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await auth();
+  if (session?.user) redirect("/dashboard");
+
   return (
     <main className="bg-surface-paper relative flex min-h-svh items-center justify-center">
       {LANDING_MARKERS.map((m) => (
         <link key={m.id} rel="preload" as="image" href={m.image} />
       ))}
 
-      <a
-        href="/search"
-        className="sr-only focus:not-sr-only fixed left-4 top-4 z-50 rounded-sm bg-accent-evergreen px-3 py-2 text-label font-medium text-surface-paper"
-      >
-        Skip to search
-      </a>
       <h1 className="sr-only">
         Real Estate App, explore rentals around the world
       </h1>
@@ -32,6 +32,8 @@ export default function LandingPage() {
       >
         <GlobeOrFallback markers={LANDING_MARKERS} />
       </div>
+
+      <LandingCtaChip />
     </main>
   );
 }

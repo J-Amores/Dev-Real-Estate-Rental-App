@@ -1,11 +1,39 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import type * as React from "react";
 import createGlobe from "cobe";
 
 import type { PolaroidMarker as Marker } from "@/lib/landing-markers";
 
 import { PolaroidMarker as PolaroidLink } from "./polaroid-marker";
+
+function PolaroidWithMorph({ marker }: { marker: Marker }) {
+  const onPointerDownCapture: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    const root = e.currentTarget;
+    const img = root.querySelector("img");
+    if (img) {
+      img.style.viewTransitionName = `polaroid-${marker.id}`;
+      requestAnimationFrame(() => {
+        // Cleared best-effort after the route transition; if the browser does
+        // not support View Transitions, the name persists on a now-unmounted
+        // node and causes no harm.
+        setTimeout(() => {
+          if (img.isConnected) img.style.viewTransitionName = "";
+        }, 600);
+      });
+    }
+  };
+  return (
+    <div onPointerDownCapture={onPointerDownCapture}>
+      <PolaroidLink
+        marker={marker}
+        withVisibilityProps
+        hrefOverride={`/signin?city=${marker.id}`}
+      />
+    </div>
+  );
+}
 
 type Props = {
   markers: readonly Marker[];
@@ -208,7 +236,7 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
           }}
         >
           <div className="pointer-events-auto">
-            <PolaroidLink marker={m} withVisibilityProps />
+            <PolaroidWithMorph marker={m} />
           </div>
           <span
             aria-hidden="true"
@@ -228,7 +256,7 @@ export function GlobeClient({ markers, speed = 0.003 }: Props) {
         {markers.map((m) => (
           <li key={m.id}>
             <a
-              href={m.href}
+              href={`/signin?city=${m.id}`}
               className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-accent-evergreen focus-visible:outline-offset-2"
             >
               {m.caption}

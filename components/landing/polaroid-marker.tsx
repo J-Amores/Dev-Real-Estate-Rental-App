@@ -6,20 +6,31 @@ type Props = {
   marker: Marker;
   /** When true, applies the entrance opacity/blur custom-prop bindings used by GlobeClient. */
   withVisibilityProps?: boolean;
+  /** Href override — when set, replaces marker.href. */
+  hrefOverride?: string;
+  /** Optional view-transition-name applied to the inner <img>. Used to enable the
+   *  polaroid → AuthHero morph; set only on the polaroid the user clicks. */
+  viewTransitionName?: string;
 };
 
 /**
  * Visual polaroid frame around a city photo. Wrapping <Link> is the only interactive
  * element on the landing page, so it must remain keyboard-focusable with an aria-label.
  */
-export function PolaroidMarker({ marker, withVisibilityProps = false }: Props) {
+export function PolaroidMarker({
+  marker,
+  withVisibilityProps = false,
+  hrefOverride,
+  viewTransitionName,
+}: Props) {
   const opacityVar = `var(--cobe-visible-${marker.id}, 1)`;
   const blurVar = `calc((1 - var(--cobe-visible-${marker.id}, 1)) * 8px)`;
+  const href = hrefOverride ?? marker.href;
 
   return (
     <Link
-      href={marker.href}
-      aria-label={`Browse rentals in ${marker.caption}`}
+      href={href}
+      aria-label={`Sign in to browse rentals in ${marker.caption}`}
       className="relative block min-w-[48px] min-h-[48px] focus-visible:outline-2 focus-visible:outline-accent-evergreen focus-visible:outline-offset-4"
       style={{
         background: "var(--color-surface-paper)",
@@ -42,6 +53,7 @@ export function PolaroidMarker({ marker, withVisibilityProps = false }: Props) {
         height={60}
         loading="lazy"
         className="block h-[60px] w-[60px] object-cover"
+        style={viewTransitionName ? { viewTransitionName } : undefined}
       />
       <span
         className="text-caption block text-center"

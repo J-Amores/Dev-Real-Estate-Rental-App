@@ -30,6 +30,7 @@ export function SignUpForm() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduced ? 0 : 0.4, ease: [0.32, 0.72, 0, 1] }}
       className="flex h-full w-full flex-col justify-center bg-surface-paper p-8 md:p-10"
+      style={{ viewTransitionName: "auth-cta" }}
     >
       <h1 className="text-headline text-ink">Create your account</h1>
       <p className="mb-6 text-body text-ink-soft">Pick a role and we&apos;ll set you up.</p>

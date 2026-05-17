@@ -23,8 +23,7 @@ export function ModeSlider() {
   const active: Mode = pathname?.startsWith("/signup") ? "signup" : "signin";
 
   return (
-    <div
-      role="tablist"
+    <nav
       aria-label="Switch between sign in and sign up"
       className="relative grid h-10 w-full grid-cols-2 rounded-sm bg-surface-panel p-1"
     >
@@ -39,8 +38,7 @@ export function ModeSlider() {
           >
             <Link
               href={m.href}
-              role="tab"
-              aria-selected={isActive}
+              aria-current={isActive ? "page" : undefined}
               className="relative z-10 flex h-full w-full items-center justify-center rounded-sm text-label focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-evergreen focus-visible:ring-offset-2 focus-visible:ring-offset-surface-paper"
             >
               <span className={isActive ? "text-ink font-medium" : "text-ink-soft"}>{m.label}</span>
@@ -55,6 +53,6 @@ export function ModeSlider() {
           </motion.div>
         );
       })}
-    </div>
+    </nav>
   );
 }

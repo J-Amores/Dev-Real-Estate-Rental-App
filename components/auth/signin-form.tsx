@@ -8,6 +8,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ModeSlider } from "@/components/auth/mode-slider";
 import { signInAction, type FormState } from "@/lib/actions";
 
@@ -40,13 +41,17 @@ export function SignInForm() {
           <Input name="email" type="email" autoComplete="email" required />
         </Field>
 
-        <Field name="password" label="Password" error={state.errors?.password?.[0]}>
+        <div className="space-y-1.5">
+          <Label htmlFor="password">Password</Label>
           <div className="relative">
             <Input
+              id="password"
               name="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
+              aria-invalid={state.errors?.password?.[0] ? true : undefined}
+              aria-describedby={state.errors?.password?.[0] ? "password-error" : undefined}
               className="pr-10"
             />
             <button
@@ -59,7 +64,12 @@ export function SignInForm() {
               {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
             </button>
           </div>
-        </Field>
+          {state.errors?.password?.[0] ? (
+            <p id="password-error" role="alert" className="text-caption text-signal-danger">
+              {state.errors.password[0]}
+            </p>
+          ) : null}
+        </div>
 
         {state.errors?._form?.[0] ? (
           <p role="alert" className="text-caption text-signal-danger">

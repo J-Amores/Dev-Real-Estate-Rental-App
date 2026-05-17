@@ -1,48 +1,23 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import Link from "next/link";
-import { useActionState } from "react";
+import { AuthHero } from "@/components/auth/auth-hero";
+import { AuthPanel } from "@/components/auth/auth-panel";
+import { SignInForm } from "@/components/auth/signin-form";
+import { auth } from "@/lib/auth";
 
-import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { signInAction, type FormState } from "@/lib/actions";
+type PageProps = {
+  searchParams: Promise<{ city?: string }>;
+};
 
-const initialState: FormState = {};
+export default async function SignInPage({ searchParams }: PageProps) {
+  const session = await auth();
+  if (session?.user) redirect("/dashboard");
 
-export default function SignInPage() {
-  const [state, formAction, pending] = useActionState(signInAction, initialState);
+  const { city } = await searchParams;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-surface-panel p-8">
-      <form action={formAction} className="w-full max-w-sm space-y-4 rounded-lg border border-hairline bg-surface-paper p-6">
-        <h1 className="text-headline text-ink">Sign in</h1>
-
-        <Field name="email" label="Email" error={state.errors?.email?.[0]}>
-          <Input name="email" type="email" autoComplete="email" required />
-        </Field>
-
-        <Field name="password" label="Password" error={state.errors?.password?.[0]}>
-          <Input name="password" type="password" autoComplete="current-password" required />
-        </Field>
-
-        {state.errors?._form?.[0] ? (
-          <p role="alert" className="text-caption text-signal-danger">
-            {state.errors._form[0]}
-          </p>
-        ) : null}
-
-        <Button type="submit" disabled={pending} className="w-full">
-          {pending ? "Signing in…" : "Sign in"}
-        </Button>
-
-        <p className="text-caption text-ink-soft text-center">
-          No account?{" "}
-          <Link href="/signup" className="text-accent-evergreen-deep underline">
-            Sign up
-          </Link>
-        </p>
-      </form>
+    <main className="flex min-h-screen items-center justify-center bg-surface-panel p-4 md:p-8">
+      <AuthPanel hero={<AuthHero city={city} />} form={<SignInForm />} />
     </main>
   );
 }

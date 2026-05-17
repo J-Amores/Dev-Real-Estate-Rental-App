@@ -48,7 +48,7 @@ export function ModeSlider() {
             {isActive ? (
               <span
                 aria-hidden
-                className="absolute inset-0 rounded-sm border border-hairline bg-surface-paper"
+                className="pointer-events-none absolute inset-0 rounded-sm border border-hairline bg-surface-paper"
                 style={{ viewTransitionName: "auth-mode-pill" }}
               />
             ) : null}

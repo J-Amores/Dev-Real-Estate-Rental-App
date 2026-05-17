@@ -26,15 +26,14 @@ export function RoleToggle({ defaultValue = "tenant" }: Props) {
     <fieldset className="space-y-1.5">
       <legend className="text-label text-ink">I am a</legend>
       <input type="hidden" name="role" value={value} />
-      <div role="radiogroup" className="grid grid-cols-2 gap-1 rounded-sm bg-surface-sunk p-1">
+      <div className="grid grid-cols-2 gap-1 rounded-sm bg-surface-sunk p-1">
         {OPTIONS.map((o) => {
           const isActive = o.value === value;
           return (
             <button
               key={o.value}
               type="button"
-              role="radio"
-              aria-checked={isActive}
+              aria-pressed={isActive}
               onClick={() => setValue(o.value)}
               className={[
                 "flex h-9 w-full items-center justify-center rounded-sm text-label transition-colors duration-150",

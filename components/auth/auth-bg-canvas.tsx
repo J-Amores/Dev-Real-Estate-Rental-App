@@ -35,7 +35,7 @@ export function AuthBgCanvas() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [staticDots, setStaticDots] = useState<Dot[] | null>(null);
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useReducedMotion() === true;
 
   // Track parent size via ResizeObserver.
   useEffect(() => {

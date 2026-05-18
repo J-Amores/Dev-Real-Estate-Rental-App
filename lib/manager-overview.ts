@@ -81,7 +81,10 @@ type LeaseLike = {
 };
 
 export function pickActiveLease<T extends LeaseLike>(leases: T[], now: Date = new Date()): T | null {
-  const active = leases.filter((l) => l.endDate.getTime() >= now.getTime());
+  const t = now.getTime();
+  const active = leases.filter(
+    (l) => l.startDate.getTime() <= t && l.endDate.getTime() >= t,
+  );
   if (active.length === 0) return null;
   if (active.length > 1) {
     console.warn(
@@ -156,17 +159,27 @@ function startOfPrevMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth() - 1, 1);
 }
 
+function pickLeaseAtInstant<T extends LeaseLike>(leases: T[], at: Date): T | null {
+  const t = at.getTime();
+  const active = leases.filter(
+    (l) => l.startDate.getTime() <= t && l.endDate.getTime() >= t,
+  );
+  if (active.length === 0) return null;
+  return [...active].sort((a, b) => b.startDate.getTime() - a.startDate.getTime())[0];
+}
+
 export function computeKpi(properties: PropertyWithApps[], now: Date = new Date()): ManagerKpi {
   const mtdStart = startOfMonth(now);
   const mtdEnd = startOfNextMonth(now);
   const prevStart = startOfPrevMonth(now);
+  const prevMidpoint = new Date(prevStart.getTime() + (mtdStart.getTime() - prevStart.getTime()) / 2);
   const sixtyDaysOut = new Date(now.getTime() + 60 * MS_PER_DAY);
 
   let mrr = 0;
+  let prevMrr = 0;
+  let prevHadAnyLease = false;
   let collectedMtd = 0;
   let outstandingMtd = 0;
-  let prevCollected = 0;
-  let prevPaymentsCount = 0;
   let occupied = 0;
   let openApps = 0;
   let expiringSoon = 0;
@@ -181,6 +194,12 @@ export function computeKpi(properties: PropertyWithApps[], now: Date = new Date(
       if (active.endDate.getTime() <= sixtyDaysOut.getTime()) expiringSoon += 1;
     }
 
+    const prevLease = pickLeaseAtInstant(p.leases, prevMidpoint);
+    if (prevLease) {
+      prevMrr += prevLease.rent;
+      prevHadAnyLease = true;
+    }
+
     for (const lease of p.leases) {
       for (const pay of lease.payments) {
         const due = pay.dueDate.getTime();
@@ -189,10 +208,6 @@ export function computeKpi(properties: PropertyWithApps[], now: Date = new Date(
           if (pay.paymentStatus !== "Paid") {
             outstandingMtd += Math.max(0, pay.amountDue - pay.amountPaid);
           }
-        }
-        if (due >= prevStart.getTime() && due < mtdStart.getTime()) {
-          prevCollected += pay.amountPaid;
-          prevPaymentsCount += 1;
         }
       }
     }
@@ -204,7 +219,7 @@ export function computeKpi(properties: PropertyWithApps[], now: Date = new Date(
 
   return {
     mrr,
-    mrrDeltaVsPrevMonth: prevPaymentsCount === 0 ? null : mrr - prevCollected,
+    mrrDeltaVsPrevMonth: prevHadAnyLease ? mrr - prevMrr : null,
     collectedMtd,
     outstandingMtd,
     occupied,

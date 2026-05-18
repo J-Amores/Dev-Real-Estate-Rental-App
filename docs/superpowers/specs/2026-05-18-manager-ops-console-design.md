@@ -88,8 +88,9 @@ The `@modal` parallel slot is rendered by `layout.tsx` adjacent to `children`. T
 
   **Actions row**
   - `View full lease` → `/dashboard/properties/[id]` as a plain `<a href>` (hard navigation; bypasses the parallel-route intercept so the user lands on the `[id]/page.tsx` full-page variant instead of seeing the same modal). In the full-page route this button is hidden (already on that route).
-  - `Edit listing` → **disabled with tooltip** `Coming soon` (out of scope, see §11).
-  - `End lease` → **disabled with tooltip** `Coming soon` (out of scope).
+  - `Edit listing` → `/dashboard/properties/[id]/edit` (existing Phase 4 route). Plain `<a href>` (hard nav) so the user leaves the modal cleanly.
+  - `Delete property` → existing `<DeletePropertyButton propertyId={id} variant="button">` (`components/delete-property-button.tsx`). The component already prompts for confirmation and posts to the existing `deleteProperty` server action in `lib/actions.ts`. On success the user returns to `/dashboard/properties`.
+  - `End lease` → **disabled with tooltip** `Coming soon` (still out of scope — no server action exists to mark an active lease as terminated; distinct from "Delete property" which removes the listing entirely).
 
 - **`components/manager/property-modal-page.tsx`** — Server component used by `@modal/(.)[id]/page.tsx`. Reads the propertyId param + `requireUser()`, calls `getPropertyDetail(propertyId, user.id)`, renders `<PropertyModal><PropertyDetailBody … /></PropertyModal>`.
 
@@ -275,8 +276,7 @@ All colors / radii / type from DESIGN.md. No new tokens introduced.
 
 These appear in the modal but are non-functional or stubbed in Phase 13. Each will be its own phase.
 
-- **`Edit listing` button** — disabled with tooltip `Coming soon`. Will become a full edit form at `/dashboard/properties/[id]/edit` in a later phase. Phase 4 only built the `new` form.
-- **`End lease` button** — disabled with tooltip `Coming soon`. Needs a server action + confirmation flow not yet designed.
+- **`End lease` button** — disabled with tooltip `Coming soon`. Needs a server action + confirmation flow not yet designed. Distinct from "Delete property", which removes the listing entirely and ships in this phase via the existing `DeletePropertyButton` + `deleteProperty` action.
 - **`Message` button (tenant block)** — placeholder. Routes to `/dashboard/applications?tenantId={tenantId}` for now; a real DM thread is a separate phase.
 - **Maintenance row** — owner-view shows maintenance counts; we have no `Maintenance` model. Row omitted from `KpiCard` breakdown.
 - **Per-month MRR sparkline / trend chart** — only the single delta line ships in this phase. A real `Recharts` line graph is deferred to a future "Reports" surface.

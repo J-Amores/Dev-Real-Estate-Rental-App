@@ -1,5 +1,7 @@
 import type { PropertyType } from "@prisma/client";
 
+import { prisma } from "@/lib/prisma";
+
 export type PropertyStatus = "occupied" | "vacant" | "late";
 
 export type PropertyCardDTO = {
@@ -225,4 +227,44 @@ export function pickTopPerformer(cards: PropertyCardDTO[]): PropertyCardDTO | nu
     })[0];
   }
   return [...cards].sort((a, b) => b.monthlyRent - a.monthlyRent)[0];
+}
+
+export async function getManagerOverview(managerId: string): Promise<ManagerOverview> {
+  const now = new Date();
+
+  const [manager, properties] = await Promise.all([
+    prisma.manager.findUnique({ where: { userId: managerId }, select: { name: true } }),
+    prisma.property.findMany({
+      where: { managerId },
+      include: {
+        location: { select: { city: true, state: true } },
+        applications: { select: { status: true } },
+        leases: {
+          include: {
+            payments: {
+              select: {
+                paymentStatus: true,
+                dueDate: true,
+                amountDue: true,
+                amountPaid: true,
+                paymentDate: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { postedDate: "desc" },
+    }),
+  ]);
+
+  const cards = properties.map((p) => propertyToCardDTO(p, now));
+  const kpi = computeKpi(properties, now);
+  const topPerformer = pickTopPerformer(cards);
+
+  return {
+    manager: { name: manager?.name ?? "" },
+    kpi,
+    topPerformer,
+    properties: cards,
+  };
 }

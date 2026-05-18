@@ -2,7 +2,14 @@
 
 import { ChevronDown } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { Input } from "@/components/ui/input";
@@ -15,34 +22,85 @@ const BED_OPTIONS = [1, 2, 3, 4] as const;
 const BATH_OPTIONS = [1, 2, 3] as const;
 const ACTIVE_KEYS = ["beds", "baths", "priceMin", "priceMax", "propertyType"] as const;
 
-const BUTTON_BASE =
+const TRIGGER_BASE =
   "inline-flex items-center gap-1.5 rounded-sm border border-hairline px-2.5 py-1.5 text-caption tabular-nums " +
   "transition-colors duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-evergreen focus-visible:ring-offset-2 focus-visible:ring-offset-surface-paper";
 
-export function RefineDisclosure() {
-  const params = useSearchParams();
-  const [open, setOpen] = useState(false);
-  const reduce = useReducedMotion();
-  const firstControlRef = useRef<HTMLSelectElement | null>(null);
+type Ctx = {
+  open: boolean;
+  toggle: () => void;
+  registerFirstControl: (el: HTMLSelectElement | null) => void;
+};
 
-  const active = ACTIVE_KEYS.some((k) => params.get(k));
+const RefineCtx = createContext<Ctx | null>(null);
+
+function useRefine(): Ctx {
+  const ctx = useContext(RefineCtx);
+  if (!ctx) throw new Error("Refine components must render inside <RefineProvider>");
+  return ctx;
+}
+
+export function RefineProvider({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const firstRef = useRef<HTMLSelectElement | null>(null);
 
   useEffect(() => {
-    if (open) firstControlRef.current?.focus();
+    if (open) firstRef.current?.focus();
   }, [open]);
 
-  const buttonClass = [
-    BUTTON_BASE,
+  const value: Ctx = {
+    open,
+    toggle: () => setOpen((v) => !v),
+    registerFirstControl: (el) => {
+      firstRef.current = el;
+    },
+  };
+
+  return <RefineCtx.Provider value={value}>{children}</RefineCtx.Provider>;
+}
+
+export function RefineTrigger() {
+  const { open, toggle } = useRefine();
+  const params = useSearchParams();
+  const active = ACTIVE_KEYS.some((k) => params.get(k));
+
+  const className = [
+    TRIGGER_BASE,
     active
       ? "bg-accent-evergreen-soft text-accent-evergreen-deep"
       : "bg-surface-sunk text-ink-soft hover:bg-surface-panel hover:text-ink",
   ].join(" ");
 
-  const panelContent = (
+  return (
+    <button
+      type="button"
+      aria-expanded={open}
+      aria-controls="refine-panel"
+      onClick={toggle}
+      className={className}
+    >
+      Refine
+      <ChevronDown
+        aria-hidden
+        className={[
+          "size-3.5 transition-transform duration-200 motion-reduce:transition-none",
+          open ? "rotate-180" : "",
+        ].join(" ")}
+      />
+    </button>
+  );
+}
+
+export function RefinePanel() {
+  const { open, registerFirstControl } = useRefine();
+  const reduce = useReducedMotion();
+  const params = useSearchParams();
+
+  const content = (
     <div className="grid grid-cols-2 gap-3 rounded-lg border border-hairline bg-surface-paper p-4 md:grid-cols-4">
       <SelectField
-        ref={firstControlRef}
+        ref={registerFirstControl}
         name="beds"
         label="Beds"
         defaultValue={params.get("beds") ?? ""}
@@ -119,44 +177,24 @@ export function RefineDisclosure() {
   );
 
   return (
-    <div className="flex flex-col">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls="refine-panel"
-        onClick={() => setOpen((v) => !v)}
-        className={buttonClass}
-      >
-        Refine
-        <ChevronDown
-          aria-hidden
-          className={[
-            "size-3.5 transition-transform duration-200 motion-reduce:transition-none",
-            open ? "rotate-180" : "",
-          ].join(" ")}
-        />
-      </button>
-      <AnimatePresence initial={false}>
-        {open &&
-          (reduce ? (
-            <div id="refine-panel" className="mt-3">
-              {panelContent}
-            </div>
-          ) : (
-            <motion.div
-              id="refine-panel"
-              key="refine-panel"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
-              className="mt-3 overflow-hidden"
-            >
-              {panelContent}
-            </motion.div>
-          ))}
-      </AnimatePresence>
-    </div>
+    <AnimatePresence initial={false}>
+      {open &&
+        (reduce ? (
+          <div id="refine-panel">{content}</div>
+        ) : (
+          <motion.div
+            id="refine-panel"
+            key="refine-panel"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            className="overflow-hidden"
+          >
+            {content}
+          </motion.div>
+        ))}
+    </AnimatePresence>
   );
 }
 

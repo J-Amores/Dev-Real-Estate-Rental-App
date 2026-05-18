@@ -17,7 +17,7 @@ export default async function PropertyDetailPage({
 
   const { id } = await params;
   const numericId = Number(id);
-  if (!Number.isFinite(numericId)) notFound();
+  if (!Number.isInteger(numericId)) notFound();
 
   const detail = await getPropertyDetail(numericId, user.id);
   if (!detail) notFound();

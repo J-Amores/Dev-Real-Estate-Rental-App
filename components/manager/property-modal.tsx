@@ -4,11 +4,12 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export function PropertyModal({ children }: { children: React.ReactNode }) {
-  const ref = useRef<HTMLDialogElement | null>(null);
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const el = ref.current;
+    const el = dialogRef.current;
     if (!el) return;
     if (!el.open) el.showModal();
 
@@ -21,17 +22,19 @@ export function PropertyModal({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const onBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
-    if (e.target === e.currentTarget) router.back();
+    if (!cardRef.current) return;
+    if (cardRef.current.contains(e.target as Node)) return;
+    router.back();
   };
 
   return (
     <dialog
-      ref={ref}
+      ref={dialogRef}
       onClick={onBackdropClick}
       className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none bg-transparent p-0 backdrop:bg-ink/45"
     >
       <div className="flex min-h-full items-start justify-center p-4 sm:items-center sm:p-8">
-        <div className="relative w-full max-w-[760px]">
+        <div ref={cardRef} className="relative w-full max-w-[760px]">
           <button
             type="button"
             onClick={() => router.back()}

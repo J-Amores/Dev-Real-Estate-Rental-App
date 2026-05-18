@@ -62,3 +62,35 @@ export type PropertyDetail = {
   applicationsCount: number;
   overdue: { totalAmount: number; oldestDaysLate: number } | null;
 };
+
+type PaymentLike = {
+  paymentStatus: string;
+  dueDate: Date;
+  amountDue: number;
+  amountPaid: number;
+  paymentDate: Date | null;
+};
+
+type LeaseLike = {
+  endDate: Date;
+  startDate: Date;
+  rent: number;
+  payments: PaymentLike[];
+};
+
+export function pickActiveLease<T extends LeaseLike>(leases: T[], now: Date = new Date()): T | null {
+  const active = leases.filter((l) => l.endDate.getTime() >= now.getTime());
+  if (active.length === 0) return null;
+  if (active.length > 1) {
+    console.warn(
+      `[manager-overview] property has ${active.length} active leases; picking latest startDate`,
+    );
+  }
+  return [...active].sort((a, b) => b.startDate.getTime() - a.startDate.getTime())[0];
+}
+
+export function propertyStatus(activeLease: LeaseLike | null): PropertyStatus {
+  if (!activeLease) return "vacant";
+  const hasOverdue = activeLease.payments.some((p) => p.paymentStatus === "Overdue");
+  return hasOverdue ? "late" : "occupied";
+}

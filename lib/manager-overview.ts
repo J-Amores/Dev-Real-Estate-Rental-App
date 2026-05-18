@@ -212,3 +212,17 @@ export function computeKpi(properties: PropertyWithApps[], now: Date = new Date(
     expiringSoonCount: expiringSoon,
   };
 }
+
+export function pickTopPerformer(cards: PropertyCardDTO[]): PropertyCardDTO | null {
+  if (cards.length === 0) return null;
+  const occupiedish = cards.filter((c) => c.status !== "vacant");
+  if (occupiedish.length > 0) {
+    return [...occupiedish].sort((a, b) => {
+      if (b.monthlyRent !== a.monthlyRent) return b.monthlyRent - a.monthlyRent;
+      const aStart = a.leaseStart?.getTime() ?? 0;
+      const bStart = b.leaseStart?.getTime() ?? 0;
+      return bStart - aStart;
+    })[0];
+  }
+  return [...cards].sort((a, b) => b.monthlyRent - a.monthlyRent)[0];
+}

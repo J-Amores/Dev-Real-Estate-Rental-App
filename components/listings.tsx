@@ -7,6 +7,7 @@ import {
 } from "@/components/search/discovery-grid";
 import { buttonClassName } from "@/components/ui/button";
 import type { SearchResult } from "@/lib/queries";
+import { stateNameOf } from "@/lib/state-names";
 
 type Props = {
   properties: SearchResult[];
@@ -34,7 +35,8 @@ export function Listings({ properties, favoriteIds }: Props) {
 
   const items: DiscoveryItem[] = properties.map((p, index) => ({
     key: p.id,
-    matchText: `${p.city} ${p.state} ${p.country} ${p.name}`.toLowerCase(),
+    locationText: `${p.city} ${p.state} ${stateNameOf(p.state)} ${p.country}`.toLowerCase(),
+    nameText: p.name.toLowerCase(),
     node: (
       <PropertyCard
         variant="discovery"

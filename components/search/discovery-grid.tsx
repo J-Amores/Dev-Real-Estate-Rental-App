@@ -7,9 +7,17 @@ import { useLiveLocation } from "@/components/search/live-location-context";
 
 export type DiscoveryItem = {
   key: string | number;
-  matchText: string; // lowercased haystack for live-location substring filter
+  // Two haystacks so short queries don't false-positive against the name field
+  // (e.g. "CA" matching "Cabin"). Both should be pre-lowercased by the caller.
+  locationText: string;
+  nameText: string;
   node: ReactNode;
 };
+
+// Queries shorter than this only match the location haystack. Three chars is
+// the threshold where typing intent stops being "state code or initials" and
+// starts being a real word.
+const NAME_MATCH_MIN_LENGTH = 3;
 
 type Props = {
   items: DiscoveryItem[];
@@ -32,7 +40,13 @@ export function DiscoveryGrid({ items }: Props) {
 
   const needle = query.trim().toLowerCase();
   const visible = needle
-    ? items.filter((it) => it.matchText.includes(needle))
+    ? items.filter((it) => {
+        if (it.locationText.includes(needle)) return true;
+        if (needle.length >= NAME_MATCH_MIN_LENGTH && it.nameText.includes(needle)) {
+          return true;
+        }
+        return false;
+      })
     : items;
 
   return (

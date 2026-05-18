@@ -268,3 +268,95 @@ export async function getManagerOverview(managerId: string): Promise<ManagerOver
     properties: cards,
   };
 }
+
+export async function getPropertyDetail(
+  propertyId: number,
+  managerId: string,
+): Promise<PropertyDetail | null> {
+  const now = new Date();
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+
+  const p = await prisma.property.findFirst({
+    where: { id: propertyId, managerId },
+    include: {
+      location: { select: { city: true, state: true } },
+      applications: { select: { id: true } },
+      leases: {
+        include: {
+          tenant: { select: { name: true, email: true, phoneNumber: true } },
+          payments: {
+            select: {
+              paymentStatus: true,
+              dueDate: true,
+              amountDue: true,
+              amountPaid: true,
+              paymentDate: true,
+            },
+            orderBy: { dueDate: "desc" },
+          },
+        },
+      },
+    },
+  });
+  if (!p) return null;
+
+  const active = pickActiveLease(p.leases, now);
+  const status = propertyStatus(active);
+
+  const allPayments = p.leases.flatMap((l) => l.payments);
+  const collectedYtd = allPayments
+    .filter((pay) => pay.dueDate.getTime() >= yearStart.getTime())
+    .reduce((sum, pay) => sum + pay.amountPaid, 0);
+
+  const ledger = (active ? active.payments : []).slice(0, 6).map((pay) => ({
+    dueDate: pay.dueDate,
+    paymentDate:
+      pay.paymentStatus === "Paid" || pay.paymentStatus === "PartiallyPaid"
+        ? pay.paymentDate
+        : null,
+    amountDue: pay.amountDue,
+    amountPaid: pay.amountPaid,
+    status: pay.paymentStatus as PropertyDetail["payments"][number]["status"],
+  }));
+
+  let overdue: PropertyDetail["overdue"] = null;
+  if (status === "late" && active) {
+    const overdueRows = active.payments.filter((pay) => pay.paymentStatus === "Overdue");
+    const oldest = overdueRows.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())[0];
+    overdue = {
+      totalAmount: overdueRows.reduce((s, r) => s + (r.amountDue - r.amountPaid), 0),
+      oldestDaysLate: oldest
+        ? Math.max(0, Math.floor((now.getTime() - oldest.dueDate.getTime()) / MS_PER_DAY))
+        : 0,
+    };
+  }
+
+  return {
+    id: p.id,
+    name: p.name,
+    type: p.propertyType,
+    photoUrls: p.photoUrls,
+    location: { city: p.location.city, state: p.location.state },
+    postedDate: p.postedDate,
+    pricePerMonth: p.pricePerMonth,
+    status,
+    monthlyRent: active ? active.rent : p.pricePerMonth,
+    collectedYtd,
+    activeLease: active
+      ? {
+          id: active.id,
+          startDate: active.startDate,
+          endDate: active.endDate,
+          rent: active.rent,
+          tenant: {
+            name: active.tenant.name,
+            email: active.tenant.email,
+            phoneNumber: active.tenant.phoneNumber,
+          },
+        }
+      : null,
+    payments: ledger,
+    applicationsCount: p.applications.length,
+    overdue,
+  };
+}

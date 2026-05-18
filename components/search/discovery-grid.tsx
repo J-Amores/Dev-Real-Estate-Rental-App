@@ -1,10 +1,18 @@
 "use client";
 
-import { Children, isValidElement, type ReactNode } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import type { ReactNode } from "react";
+
+import { useLiveLocation } from "@/components/search/live-location-context";
+
+export type DiscoveryItem = {
+  key: string | number;
+  matchText: string; // lowercased haystack for live-location substring filter
+  node: ReactNode;
+};
 
 type Props = {
-  children: ReactNode;
+  items: DiscoveryItem[];
 };
 
 const GRID =
@@ -15,37 +23,43 @@ const GRID =
 const STAGGER_CAP = 11;
 const EASE_OUT_QUART: [number, number, number, number] = [0.32, 0.72, 0, 1];
 
-export function DiscoveryGrid({ children }: Props) {
-  // `useReducedMotion` returns null on the server. Keeping the motion.div in
-  // the tree unconditionally avoids a hydration mismatch — the transition
-  // prop is a JS-only value and only affects runtime animation timing.
+export function DiscoveryGrid({ items }: Props) {
+  // useReducedMotion returns null on the server. Keeping motion.li in the tree
+  // unconditionally avoids a hydration mismatch — only the transition object
+  // (a JS-only value) differs between server and client.
   const reduce = useReducedMotion();
-  const items = Children.toArray(children);
+  const { query } = useLiveLocation();
+
+  const needle = query.trim().toLowerCase();
+  const visible = needle
+    ? items.filter((it) => it.matchText.includes(needle))
+    : items;
 
   return (
     <ul className={GRID}>
-      {items.map((child, index) => {
-        const key =
-          isValidElement(child) && child.key != null ? child.key : index;
-        const transition = reduce
-          ? { duration: 0 }
-          : {
-              duration: 0.3,
-              delay: Math.min(index, STAGGER_CAP) * 0.03,
-              ease: EASE_OUT_QUART,
-            };
-        return (
-          <li key={key}>
-            <motion.div
+      <AnimatePresence mode="popLayout" initial={false}>
+        {visible.map((item, index) => {
+          const transition = reduce
+            ? { duration: 0 }
+            : {
+                duration: 0.3,
+                delay: Math.min(index, STAGGER_CAP) * 0.03,
+                ease: EASE_OUT_QUART,
+              };
+          return (
+            <motion.li
+              key={item.key}
+              layout
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
               transition={transition}
             >
-              {child}
-            </motion.div>
-          </li>
-        );
-      })}
+              {item.node}
+            </motion.li>
+          );
+        })}
+      </AnimatePresence>
     </ul>
   );
 }

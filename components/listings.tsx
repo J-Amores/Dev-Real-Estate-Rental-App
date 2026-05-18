@@ -1,7 +1,10 @@
 import Link from "next/link";
 
 import { PropertyCard } from "@/components/property-card";
-import { DiscoveryGrid } from "@/components/search/discovery-grid";
+import {
+  DiscoveryGrid,
+  type DiscoveryItem,
+} from "@/components/search/discovery-grid";
 import { buttonClassName } from "@/components/ui/button";
 import type { SearchResult } from "@/lib/queries";
 
@@ -29,23 +32,24 @@ export function Listings({ properties, favoriteIds }: Props) {
 
   const showFavorite = favoriteIds != null;
 
-  return (
-    <DiscoveryGrid>
-      {properties.map((p, index) => (
-        <PropertyCard
-          key={p.id}
-          variant="discovery"
-          id={p.id}
-          name={p.name}
-          pricePerMonth={p.pricePerMonth}
-          propertyType={p.propertyType}
-          photoUrls={p.photoUrls}
-          location={{ city: p.city, state: p.state }}
-          showFavorite={showFavorite}
-          isFavorited={favoriteIds?.has(p.id) ?? false}
-          priority={index < PRIORITY_COUNT}
-        />
-      ))}
-    </DiscoveryGrid>
-  );
+  const items: DiscoveryItem[] = properties.map((p, index) => ({
+    key: p.id,
+    matchText: `${p.city} ${p.state} ${p.country} ${p.name}`.toLowerCase(),
+    node: (
+      <PropertyCard
+        variant="discovery"
+        id={p.id}
+        name={p.name}
+        pricePerMonth={p.pricePerMonth}
+        propertyType={p.propertyType}
+        photoUrls={p.photoUrls}
+        location={{ city: p.city, state: p.state }}
+        showFavorite={showFavorite}
+        isFavorited={favoriteIds?.has(p.id) ?? false}
+        priority={index < PRIORITY_COUNT}
+      />
+    ),
+  }));
+
+  return <DiscoveryGrid items={items} />;
 }

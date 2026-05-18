@@ -2,20 +2,18 @@
 
 import { ArrowRight, Search } from "lucide-react";
 
+import { useLiveLocation } from "@/components/search/live-location-context";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { searchAction } from "@/lib/actions";
-
-type Props = {
-  defaultLocation?: string;
-};
 
 const PILL =
   "flex items-center gap-3 rounded-lg border border-hairline bg-surface-paper px-4 py-3 " +
   "transition-shadow duration-150 " +
   "focus-within:ring-2 focus-within:ring-accent-evergreen focus-within:ring-offset-0";
 
-export function SearchInputPill({ defaultLocation }: Props) {
+export function SearchInputPill() {
+  const { query, setQuery } = useLiveLocation();
   return (
     <div>
       <Label
@@ -35,7 +33,8 @@ export function SearchInputPill({ defaultLocation }: Props) {
           name="location"
           type="text"
           autoComplete="off"
-          defaultValue={defaultLocation ?? ""}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           placeholder="Try Tokyo or Lisbon"
           aria-labelledby="search-pill-label"
           className="min-w-0 flex-1 bg-transparent text-body text-ink placeholder:text-ink-faint focus:outline-none"

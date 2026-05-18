@@ -136,6 +136,7 @@ export type SearchResult = {
   photoUrls: string[];
   city: string;
   state: string;
+  country: string;
   lat: number | null;
   lng: number | null;
 };
@@ -206,6 +207,7 @@ export async function searchProperties(
       p."photoUrls",
       l.city,
       l.state,
+      l.country,
       ST_X(l.coordinates::geometry) AS "lng",
       ST_Y(l.coordinates::geometry) AS "lat"
     FROM "Property" p

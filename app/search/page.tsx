@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { Listings } from "@/components/listings";
+import { LiveLocationProvider } from "@/components/search/live-location-context";
 import { SearchHero } from "@/components/search/search-hero";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -38,11 +39,13 @@ export default async function SearchPage({
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-surface-paper">
-      <SearchHero defaultLocation={location} />
-      <section className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-        <Listings properties={properties} favoriteIds={favoriteIds} />
-      </section>
-    </main>
+    <LiveLocationProvider initial={location ?? ""}>
+      <main className="flex min-h-screen flex-col bg-surface-paper">
+        <SearchHero />
+        <section className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+          <Listings properties={properties} favoriteIds={favoriteIds} />
+        </section>
+      </main>
+    </LiveLocationProvider>
   );
 }

@@ -12,10 +12,6 @@ import { getGreeting } from "@/lib/greeting";
 import { prisma } from "@/lib/prisma";
 import { firstNameOf } from "@/lib/tenant-name";
 
-type Props = {
-  defaultLocation?: string;
-};
-
 // Tenant name is not on the session payload (jwt callback only stores id / role /
 // tenantId / managerId), so we read it here when the route is signed-in tenant.
 async function resolveTenantFirstName(): Promise<string | null> {
@@ -30,7 +26,7 @@ async function resolveTenantFirstName(): Promise<string | null> {
   return firstNameOf(tenant?.name);
 }
 
-export async function SearchHero({ defaultLocation }: Props) {
+export async function SearchHero() {
   const firstName = await resolveTenantFirstName();
   const greeting = getGreeting(new Date(), firstName);
   const personalized = firstName != null;
@@ -46,7 +42,7 @@ export async function SearchHero({ defaultLocation }: Props) {
           </p>
         )}
         <div className="mt-8">
-          <SearchInputPill defaultLocation={defaultLocation} />
+          <SearchInputPill />
         </div>
         <RefineProvider>
           <div className="mt-4 flex flex-wrap items-center gap-2">

@@ -3,31 +3,26 @@ import { redirect } from "next/navigation";
 
 import { EmptyState } from "@/components/empty-state";
 import { HouseIcon } from "@/components/icons";
-import { PropertyCard } from "@/components/property-card";
+import { FeaturedProperty } from "@/components/manager/featured-property";
+import { KpiCard } from "@/components/manager/kpi-card";
+import { PropertyCardGrid } from "@/components/manager/property-card-grid";
 import { buttonClassName } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getManagerOverview } from "@/lib/manager-overview";
 
 export const dynamic = "force-dynamic";
+
+function firstName(name: string): string {
+  return name.trim().split(/\s+/)[0] ?? "";
+}
 
 export default async function PropertiesPage() {
   const user = await requireUser();
   if (user.role !== "manager") redirect("/dashboard/favorites");
 
-  const properties = await prisma.property.findMany({
-    where: { managerId: user.id },
-    select: {
-      id: true,
-      name: true,
-      pricePerMonth: true,
-      propertyType: true,
-      photoUrls: true,
-      location: { select: { city: true, state: true } },
-    },
-    orderBy: { postedDate: "desc" },
-  });
+  const overview = await getManagerOverview(user.id);
 
-  if (properties.length === 0) {
+  if (overview.properties.length === 0) {
     return (
       <EmptyState
         icon={<HouseIcon />}
@@ -38,13 +33,18 @@ export default async function PropertiesPage() {
     );
   }
 
+  const greeting = overview.manager.name
+    ? `Hi ${firstName(overview.manager.name)}`
+    : "Your portfolio";
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="text-headline text-ink">Properties</h1>
-          <p className="text-caption text-ink-soft">
-            {properties.length} {properties.length === 1 ? "listing" : "listings"}.
+          <h1 className="text-headline text-ink">{greeting}</h1>
+          <p className="text-caption tabular-nums text-ink-soft">
+            {overview.kpi.total} {overview.kpi.total === 1 ? "property" : "properties"} ·{" "}
+            {overview.kpi.occupied} leased · {overview.kpi.vacantCount} vacant
           </p>
         </div>
         <Link
@@ -55,20 +55,15 @@ export default async function PropertiesPage() {
         </Link>
       </header>
 
-      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {properties.map((p) => (
-          <li key={p.id}>
-            <PropertyCard
-              id={p.id}
-              name={p.name}
-              pricePerMonth={p.pricePerMonth}
-              propertyType={p.propertyType}
-              photoUrls={p.photoUrls}
-              location={p.location}
-            />
-          </li>
-        ))}
-      </ul>
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+        <div className="space-y-4">
+          <KpiCard kpi={overview.kpi} />
+        </div>
+        <div className="space-y-4">
+          <FeaturedProperty property={overview.topPerformer} />
+          <PropertyCardGrid properties={overview.properties} />
+        </div>
+      </div>
     </div>
   );
 }

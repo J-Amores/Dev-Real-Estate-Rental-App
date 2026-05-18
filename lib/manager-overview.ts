@@ -139,3 +139,76 @@ export function propertyToCardDTO(p: PropertyLike, now: Date = new Date()): Prop
     daysLate,
   };
 }
+
+type PropertyWithApps = PropertyLike & {
+  applications: Array<{ status: string }>;
+};
+
+function startOfMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+function startOfNextMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+}
+function startOfPrevMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth() - 1, 1);
+}
+
+export function computeKpi(properties: PropertyWithApps[], now: Date = new Date()): ManagerKpi {
+  const mtdStart = startOfMonth(now);
+  const mtdEnd = startOfNextMonth(now);
+  const prevStart = startOfPrevMonth(now);
+  const sixtyDaysOut = new Date(now.getTime() + 60 * MS_PER_DAY);
+
+  let mrr = 0;
+  let collectedMtd = 0;
+  let outstandingMtd = 0;
+  let prevCollected = 0;
+  let prevPaymentsCount = 0;
+  let occupied = 0;
+  let openApps = 0;
+  let expiringSoon = 0;
+
+  for (const p of properties) {
+    const active = pickActiveLease(p.leases, now);
+    const status = propertyStatus(active);
+    if (status === "occupied" || status === "late") occupied += 1;
+
+    if (active) {
+      mrr += active.rent;
+      if (active.endDate.getTime() <= sixtyDaysOut.getTime()) expiringSoon += 1;
+    }
+
+    for (const lease of p.leases) {
+      for (const pay of lease.payments) {
+        const due = pay.dueDate.getTime();
+        if (due >= mtdStart.getTime() && due < mtdEnd.getTime()) {
+          collectedMtd += pay.amountPaid;
+          if (pay.paymentStatus !== "Paid") {
+            outstandingMtd += Math.max(0, pay.amountDue - pay.amountPaid);
+          }
+        }
+        if (due >= prevStart.getTime() && due < mtdStart.getTime()) {
+          prevCollected += pay.amountPaid;
+          prevPaymentsCount += 1;
+        }
+      }
+    }
+
+    for (const app of p.applications) {
+      if (app.status === "Pending") openApps += 1;
+    }
+  }
+
+  return {
+    mrr,
+    mrrDeltaVsPrevMonth: prevPaymentsCount === 0 ? null : mrr - prevCollected,
+    collectedMtd,
+    outstandingMtd,
+    occupied,
+    total: properties.length,
+    vacantCount: properties.length - occupied,
+    openAppsCount: openApps,
+    expiringSoonCount: expiringSoon,
+  };
+}

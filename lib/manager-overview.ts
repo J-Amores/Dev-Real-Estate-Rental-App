@@ -94,3 +94,48 @@ export function propertyStatus(activeLease: LeaseLike | null): PropertyStatus {
   const hasOverdue = activeLease.payments.some((p) => p.paymentStatus === "Overdue");
   return hasOverdue ? "late" : "occupied";
 }
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+type PropertyLike = {
+  id: number;
+  name: string;
+  pricePerMonth: number;
+  photoUrls: string[];
+  postedDate: Date;
+  location: { city: string; state: string };
+  leases: LeaseLike[];
+};
+
+export function propertyToCardDTO(p: PropertyLike, now: Date = new Date()): PropertyCardDTO {
+  const active = pickActiveLease(p.leases, now);
+  const status = propertyStatus(active);
+
+  let daysLate: number | null = null;
+  if (status === "late" && active) {
+    const overdue = active.payments
+      .filter((pay) => pay.paymentStatus === "Overdue")
+      .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())[0];
+    if (overdue) {
+      daysLate = Math.max(0, Math.floor((now.getTime() - overdue.dueDate.getTime()) / MS_PER_DAY));
+    }
+  }
+
+  const daysVacant =
+    status === "vacant"
+      ? Math.max(0, Math.floor((now.getTime() - p.postedDate.getTime()) / MS_PER_DAY))
+      : null;
+
+  return {
+    id: p.id,
+    name: p.name,
+    photoUrls: p.photoUrls,
+    location: { city: p.location.city, state: p.location.state },
+    status,
+    monthlyRent: active ? active.rent : p.pricePerMonth,
+    leaseStart: active ? active.startDate : null,
+    leaseEnd: active ? active.endDate : null,
+    daysVacant,
+    daysLate,
+  };
+}

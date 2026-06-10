@@ -1,46 +1,35 @@
 ---
 // Landing page — composes the MONO/EVASION sections in the same order as the
-// old app/page.tsx. Section components are ported in M2 (static .astro) and
-// M3 (Preact islands: Header client:load, HeroSection client:load,
-// GallerySection client:visible). Until each is ported, a placeholder block
-// keeps the route building and the anchor targets present.
-//
-// Port order (source files live under components/ until M2/M3 remove them):
-//   Header              <- components/header.tsx              (island, M3)
-//   HeroSection         <- components/sections/hero-section.tsx (island, M3)
-//   PhilosophySection   <- components/sections/philosophy-section.tsx (M2)
-//   FeaturedProductsSection <- components/sections/featured-products-section.tsx (M2)
-//   TechnologySection   <- components/sections/technology-section.tsx (M2)
-//   GallerySection      <- components/sections/gallery-section.tsx (island, M3)
-//   CollectionSection   <- components/sections/collection-section.tsx (M2)
-//   EditorialSection    <- components/sections/editorial-section.tsx (M2)
-//   TestimonialsSection <- components/sections/testimonials-section.tsx (M2)
-//   FooterSection       <- components/sections/footer-section.tsx (M2)
+// old app/page.tsx. Islands hydrate only what needs JS:
+//   Header / HeroSection           client:load   (above the fold)
+//   PhilosophySection / TechnologySection / GallerySection  client:visible
+// All other sections are static .astro (FadeImage is its own tiny island).
+// Anchor ids present in the rendered page: hero, products, technology,
+// gallery, accessories, about, reserve (per .harness/api-contract.md).
 import Layout from "@/layouts/Layout.astro";
+import { Header } from "@/components/islands/Header";
+import { HeroSection } from "@/components/islands/HeroSection";
+import { PhilosophySection } from "@/components/islands/PhilosophySection";
+import FeaturedProductsSection from "@/components/sections/FeaturedProductsSection.astro";
+import { TechnologySection } from "@/components/islands/TechnologySection";
+import { GallerySection } from "@/components/islands/GallerySection";
+import CollectionSection from "@/components/sections/CollectionSection.astro";
+import EditorialSection from "@/components/sections/EditorialSection.astro";
+import TestimonialsSection from "@/components/sections/TestimonialsSection.astro";
+import FooterSection from "@/components/sections/FooterSection.astro";
 ---
 
 <Layout>
   <main class="min-h-screen bg-background">
-    <section id="hero" class="flex min-h-screen flex-col items-center justify-center gap-6 px-6">
-      <p class="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
-        Astro + Preact skeleton — sections port pending (M2/M3)
-      </p>
-      <h1 class="text-7xl font-bold tracking-tighter md:text-9xl">MONO</h1>
-      <p class="max-w-md text-center text-sm text-muted-foreground">
-        Lightweight, durable / and adventure-ready.
-      </p>
-      <a
-        href="/properties"
-        class="mt-4 border border-foreground px-6 py-3 text-xs uppercase tracking-[0.2em] transition-colors hover:bg-foreground hover:text-background"
-      >
-        View properties
-      </a>
-    </section>
-    <!-- Anchor targets referenced by the Header island (ported in M3) -->
-    <section id="technology" class="sr-only" aria-hidden="true"></section>
-    <section id="gallery" class="sr-only" aria-hidden="true"></section>
-    <section id="accessories" class="sr-only" aria-hidden="true"></section>
-    <section id="about" class="sr-only" aria-hidden="true"></section>
-    <section id="reserve" class="sr-only" aria-hidden="true"></section>
+    <Header client:load />
+    <HeroSection client:load />
+    <PhilosophySection client:visible />
+    <FeaturedProductsSection />
+    <TechnologySection client:visible />
+    <GallerySection client:visible />
+    <CollectionSection />
+    <EditorialSection />
+    <TestimonialsSection />
+    <FooterSection />
   </main>
 </Layout>

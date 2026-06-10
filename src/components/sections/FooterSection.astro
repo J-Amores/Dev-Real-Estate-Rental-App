@@ -1,0 +1,86 @@
+---
+// Static port of components/sections/footer-section.tsx (no JS needed).
+// id="reserve" anchors the Header "Contact" CTA (per .harness/api-contract.md).
+const footerLinks = {
+  explore: [
+    { label: "Products", href: "#products" },
+    { label: "Technology", href: "#technology" },
+    { label: "Gallery", href: "#gallery" },
+    { label: "Accessories", href: "#accessories" },
+  ],
+  about: [
+    { label: "Our Story", href: "#" },
+    { label: "Team", href: "#" },
+    { label: "Careers", href: "#" },
+    { label: "Contact", href: "#" },
+  ],
+  service: [
+    { label: "FAQ", href: "#" },
+    { label: "Shipping", href: "#" },
+    { label: "Returns", href: "#" },
+    { label: "Warranty", href: "#" },
+  ],
+};
+
+const columns = [
+  { title: "Explore", links: footerLinks.explore },
+  { title: "About", links: footerLinks.about },
+  { title: "Service", links: footerLinks.service },
+];
+---
+
+<footer id="reserve" class="bg-background">
+  <!-- Main Footer Content -->
+  <div class="border-t border-border px-6 py-16 md:px-12 md:py-20 lg:px-20">
+    <div class="grid grid-cols-2 gap-12 md:grid-cols-4 lg:grid-cols-5">
+      <!-- Brand -->
+      <div class="col-span-2 md:col-span-1 lg:col-span-2">
+        <a href="#hero" class="text-lg font-medium text-foreground">MONO</a>
+        <p class="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+          Sustainable design homes combining contemporary aesthetics with energy efficiency and
+          eco-friendly materials.
+        </p>
+      </div>
+
+      {
+        columns.map((column) => (
+          <div>
+            <h4 class="mb-4 text-sm font-medium text-foreground">{column.title}</h4>
+            <ul class="space-y-3">
+              {column.links.map((link) => (
+                <li>
+                  <a
+                    href={link.href}
+                    class="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="border-t border-border px-6 py-6 md:px-12 lg:px-20">
+    <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
+      <p class="text-xs text-muted-foreground">2026 MONO. All rights reserved.</p>
+
+      <!-- Social Links -->
+      <div class="flex items-center gap-4">
+        <a href="#" class="text-xs text-muted-foreground transition-colors hover:text-foreground">
+          Instagram
+        </a>
+        <a href="#" class="text-xs text-muted-foreground transition-colors hover:text-foreground">
+          Twitter
+        </a>
+        <a href="#" class="text-xs text-muted-foreground transition-colors hover:text-foreground">
+          YouTube
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>

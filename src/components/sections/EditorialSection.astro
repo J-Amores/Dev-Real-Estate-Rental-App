@@ -1,0 +1,76 @@
+---
+// Static port of components/sections/editorial-section.tsx.
+// Full-width autoplaying video with a scroll parallax (vanilla rAF script —
+// visually identical to the old React island) + specs grid.
+const specs = [
+  { label: "Surface Area", value: "180m²" },
+  { label: "Energy Use", value: "15 kWh/m²" },
+  { label: "Solar Panels", value: "40 m²" },
+  { label: "Carbon Balance", value: "-20%" },
+];
+
+const videoSrc =
+  "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/27eb7fb4-0105-4010-ac9e-0ac977a31b05_1-FZ89nvBAAsR3caRJbhYv7T2mjBofth.mp4";
+---
+
+<section class="bg-background">
+  <!-- Decorative spacer (matches old markup) -->
+  <div class="flex items-center justify-center gap-6 pb-20"></div>
+
+  <!-- Full-width Video with Parallax -->
+  <div
+    data-editorial-parallax
+    class="relative aspect-[16/9] w-full md:aspect-[21/9] overflow-hidden"
+  >
+    <video
+      autoplay
+      loop
+      muted
+      playsinline
+      class="absolute inset-0 h-full w-full object-cover"
+      style="transform: scale(1.15) translate3d(0, 0px, 0) translateZ(0); -webkit-transform: scale(1.15) translate3d(0, 0px, 0) translateZ(0); backface-visibility: hidden; -webkit-backface-visibility: hidden; will-change: transform;"
+      src={videoSrc}></video>
+  </div>
+
+  <!-- Specs Grid -->
+  <div class="grid grid-cols-2 border-t border-border md:grid-cols-4">
+    {
+      specs.map((spec) => (
+        <div class="border-b border-r border-border p-8 text-center last:border-r-0 md:border-b-0">
+          <p class="mb-2 text-xs uppercase tracking-widest text-muted-foreground">{spec.label}</p>
+          <p class="font-medium text-foreground text-5xl">{spec.value}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<script>
+  // Parallax: video moves up as you scroll down (-15px to +15px), rAF-throttled.
+  const container = document.querySelector<HTMLElement>("[data-editorial-parallax]");
+  const video = container?.querySelector("video");
+
+  if (container && video) {
+    let rafId: number | null = null;
+
+    const updateParallax = () => {
+      const rect = container.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+
+      if (rect.bottom > 0 && rect.top < windowHeight) {
+        const progress = 1 - (rect.top + rect.height / 2) / (windowHeight + rect.height);
+        const clamped = Math.max(0, Math.min(1, progress));
+        const parallaxY = (clamped - 0.5) * 30;
+        video.style.transform = `scale(1.15) translate3d(0, ${parallaxY}px, 0) translateZ(0)`;
+      }
+    };
+
+    const handleScroll = () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateParallax);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    updateParallax();
+  }
+</script>

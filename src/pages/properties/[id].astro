@@ -1,0 +1,100 @@
+---
+// Stub detail page — real-estate scaffolding (see .harness/spec.md).
+// Statically generated from the placeholder seed data.
+import Layout from "@/layouts/Layout.astro";
+import { getProperties } from "@/lib/data/properties";
+import { formatPrice } from "@/lib/utils";
+
+export async function getStaticPaths() {
+  const properties = await getProperties();
+  return properties.map((property) => ({
+    params: { id: property.id },
+    props: { property },
+  }));
+}
+
+const { property } = Astro.props;
+const cover = property.images[0];
+
+const statusLabel: Record<string, string> = {
+  "for-sale": "For sale",
+  "for-rent": "For rent",
+  pending: "Pending",
+  sold: "Sold",
+};
+---
+
+<Layout
+  title={`EVASION — ${property.title}`}
+  description={property.description}
+>
+  <main class="min-h-screen bg-background text-foreground">
+    <div class="mx-auto max-w-4xl px-6 py-24">
+      <a
+        href="/properties"
+        class="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground transition-colors hover:text-foreground"
+        >&larr; All properties</a
+      >
+
+      <div class="mt-6 flex flex-wrap items-baseline justify-between gap-4">
+        <h1 class="text-4xl font-bold tracking-tighter md:text-6xl">{property.title}</h1>
+        <span class="border border-foreground px-3 py-1 font-mono text-xs uppercase tracking-widest">
+          {statusLabel[property.status]}
+        </span>
+      </div>
+
+      <p class="mt-2 text-sm text-muted-foreground">
+        {property.address.street}, {property.address.city}, {property.address.state}
+        {property.address.postalCode}, {property.address.country}
+      </p>
+
+      {
+        cover && (
+          <div class="relative mt-10 aspect-[16/9] overflow-hidden bg-secondary">
+            <img
+              src={cover.src}
+              alt={cover.alt}
+              class="absolute inset-0 h-full w-full object-cover"
+            />
+          </div>
+        )
+      }
+
+      <div class="mt-10 grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-4">
+        <div class="bg-background p-5">
+          <p class="font-mono text-xs uppercase tracking-widest text-muted-foreground">Price</p>
+          <p class="mt-1 font-mono text-lg">
+            {formatPrice(property.price, property.currency)}{
+              property.status === "for-rent" && <span class="text-muted-foreground"> / mo</span>
+            }
+          </p>
+        </div>
+        <div class="bg-background p-5">
+          <p class="font-mono text-xs uppercase tracking-widest text-muted-foreground">Beds</p>
+          <p class="mt-1 font-mono text-lg">{property.beds}</p>
+        </div>
+        <div class="bg-background p-5">
+          <p class="font-mono text-xs uppercase tracking-widest text-muted-foreground">Baths</p>
+          <p class="mt-1 font-mono text-lg">{property.baths}</p>
+        </div>
+        <div class="bg-background p-5">
+          <p class="font-mono text-xs uppercase tracking-widest text-muted-foreground">Area</p>
+          <p class="mt-1 font-mono text-lg">{property.areaSqFt.toLocaleString("en-US")} sqft</p>
+        </div>
+      </div>
+
+      <p class="mt-10 max-w-2xl leading-relaxed text-muted-foreground">{property.description}</p>
+
+      <h2 class="mt-12 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
+        Features
+      </h2>
+      <ul class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {
+          property.features.map((feature) => (
+            <li class="border-b border-border pb-2 text-sm">{feature}</li>
+          ))
+        }
+      </ul>
+    </div>
+  </main>
+</Layout>

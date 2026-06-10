@@ -65,3 +65,6 @@ playwright/.cache/
 
 # Visual brainstorm session files
 .superpowers/
+
+# astro
+.astro/

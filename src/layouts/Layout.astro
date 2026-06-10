@@ -1,0 +1,45 @@
+---
+// Root layout — parity target: old app/layout.tsx (Next.js).
+// Inter is self-hosted via @fontsource (registers font-family 'Inter', matching
+// the --font-sans stack declared in globals.css) and exposed as --font-inter.
+import "@fontsource/inter/300.css";
+import "@fontsource/inter/400.css";
+import "@fontsource/inter/500.css";
+import "@fontsource/inter/600.css";
+import "@fontsource/inter/700.css";
+import "@/styles/globals.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "EVASION",
+  description = "High-performance outdoor gear engineered for the modern explorer. Lightweight, durable, adventure-ready.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" href="/icon-light-32x32.png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/icon-dark-32x32.png" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-icon.png" />
+  </head>
+  <body class="font-sans antialiased">
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --font-inter: "Inter";
+  }
+</style>

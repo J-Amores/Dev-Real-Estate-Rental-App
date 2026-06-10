@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.vercel/
+.playwright/
+.playwright-cli/
+.playwright-mcp/
+prisma/migrations/
+public/
+*.tsbuildinfo
+package-lock.json
+.env*
+*.lock

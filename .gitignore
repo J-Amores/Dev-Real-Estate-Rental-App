@@ -62,3 +62,6 @@ agent-learnings.md
 playwright-report/
 test-results/
 playwright/.cache/
+
+# Visual brainstorm session files
+.superpowers/

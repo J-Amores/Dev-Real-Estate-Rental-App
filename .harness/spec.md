@@ -9,7 +9,7 @@ and stub routes `/properties` and `/properties/[id]`.
 
 - Mode: **greenfield**, eval **phase-b**, **deployPrepare: true** (Vercel, prepare-only).
 - Retry cap: default (2).
-- Package manager: **pnpm** (note: `pnpm` may not be on PATH — fall back to `npx pnpm`).
+- Package manager: **npm** (migrated from pnpm on 2026-06-10 per CLAUDE.md "No pnpm/bun" rule).
 
 ## Source of truth (current app, before deletion)
 - Page composition (`app/page.tsx`): `Header` + sections in order: hero, philosophy,
@@ -72,10 +72,10 @@ and stub routes `/properties` and `/properties/[id]`.
 Delete: `app/`, `next.config.mjs`, `next-env.d.ts`, React/Next/`@vercel/analytics(/next)`
 deps, `components/` React sources after porting, unused shadcn `components/ui/`,
 `hooks/`, leftover Next artifacts. Git history preserves the old code — no archive copies.
-Keep: `public/` (all of it, especially `public/images/`), `pnpm-lock.yaml` regenerated as
-needed, `.harness/`. Update `CLAUDE.md` commands/layout for the Astro stack (build:
-`pnpm build` → `astro build`; typecheck: `pnpm exec astro check` with `npx astro check`
-fallback; dev: `pnpm dev` → localhost:4321 unless configured to 3000).
+Keep: `public/` (all of it, especially `public/images/`), the lockfile (`package-lock.json`)
+regenerated as needed, `.harness/`. Update `CLAUDE.md` commands/layout for the Astro stack
+(build: `npm run build` → `astro build`; typecheck: `npm run check` with `npx astro check`
+fallback; dev: `npm run dev` → localhost:4321 unless configured to 3000).
 
 ## Real-estate ecommerce scaffolding (stubs only — no full ecommerce build)
 - `src/lib/types.ts` (or `src/data/types.ts`): typed `Property` model and related types —
@@ -92,8 +92,8 @@ fallback; dev: `pnpm dev` → localhost:4321 unless configured to 3000).
 
 ## Evaluation — phase-b
 1. **Deterministic gates** (binary, all must pass):
-   - `pnpm install` succeeds; `pnpm build` (astro build) succeeds.
-   - Typecheck clean: `pnpm exec astro check` (fallback `npx astro check`).
+   - `npm ci` succeeds; `npm run build` (astro build) succeeds.
+   - Typecheck clean: `npm run check` (fallback `npx astro check`).
    - No `next`, `react`, `react-dom`, `lucide-react` left in `package.json` dependencies.
    - Routes exist in build output: `/`, `/properties`, at least one `/properties/[id]`.
 2. **Playwright runtime checks**: page loads with no console errors; header anchors
@@ -110,7 +110,7 @@ fallback; dev: `pnpm dev` → localhost:4321 unless configured to 3000).
 
 ## Deploy — prepare only (Vercel)
 `deployPrepare: true`. Add the `@astrojs/vercel` adapter **or** static-output Vercel
-config (`vercel.json` if needed; Vercel auto-detects Astro), verify `pnpm build` produces
+config (`vercel.json` if needed; Vercel auto-detects Astro), verify `npm run build` produces
 a deployable artifact, and document the deploy command. Do **NOT** run `vercel deploy` or
 any network deploy without an explicit user grant.
 

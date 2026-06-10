@@ -7,9 +7,9 @@ Mode: **phase-b**. Deterministic gates are binary preconditions; scored criteria
 
 | gate | check |
 |------|-------|
-| install | `pnpm install` succeeds (fallback `npx pnpm install`) |
-| build | `pnpm build` (astro build) succeeds |
-| typecheck | `pnpm exec astro check` clean (fallback `npx astro check`) |
+| install | `npm ci` succeeds (fallback `npm install`) |
+| build | `npm run build` (astro build) succeeds |
+| typecheck | `npm run check` clean (fallback `npx astro check`) |
 | stack-purge | `package.json` has no `next`, `react`, `react-dom`, `lucide-react`, `@vercel/analytics/next` deps |
 | routes | build output contains `/`, `/properties`, and ≥1 `/properties/[id]` page |
 | assets | no new files added under `public/images/` (reuse-only policy) |

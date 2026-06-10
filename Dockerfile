@@ -8,14 +8,11 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# pnpm via corepack (lockfileVersion 9 -> pnpm >= 9)
-RUN corepack enable && corepack prepare pnpm@10 --activate
-
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY . .
-RUN pnpm build
+RUN npm run build
 
 # ---- serve stage ----
 FROM nginx:1.27-alpine AS serve

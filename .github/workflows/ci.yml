@@ -17,26 +17,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           # Astro 5 pinned for Node 20.x (Astro 6 needs >= 22.12) — keep in sync with local env.
           node-version: 20
-          cache: pnpm
+          cache: npm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Typecheck (astro check)
-        run: pnpm exec astro check
+        run: npx astro check
 
       - name: Build (astro build)
-        run: pnpm build
+        run: npm run build
 
       - name: Verify required routes in build output
         run: |

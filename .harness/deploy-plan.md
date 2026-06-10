@@ -5,7 +5,7 @@ Status: **PREPARED, NOT DEPLOYED.** Per `.harness/spec.md` (`deployPrepare: true
 
 ## What ships
 
-Static Astro site (`output: "static"` in `astro.config.mjs`). `pnpm build` emits `dist/`
+Static Astro site (`output: "static"` in `astro.config.mjs`). `npm run build` emits `dist/`
 containing 7 prerendered routes: `/`, `/properties`, `/properties/p-001 … p-005`, plus
 `public/` assets and hashed `_astro/` bundles. No serverless functions, no adapter needed —
 the `@astrojs/vercel` adapter was intentionally NOT added (spec allows static-output config
@@ -15,18 +15,18 @@ instead; the site has zero SSR/runtime needs).
 
 | File | Purpose |
 |---|---|
-| `vercel.json` | Platform manifest: `framework: astro`, `pnpm install --frozen-lockfile`, `pnpm build`, output `dist/`, `cleanUrls`, immutable cache headers for `/_astro/*`. |
-| `.github/workflows/ci.yml` | CI on push/PR to `main`: pnpm 10 + Node 20 → `astro check` → `astro build` → asserts `/`, `/properties`, `/properties/[id]` exist in `dist/` → uploads `dist` artifact. |
+| `vercel.json` | Platform manifest: `framework: astro`, `npm ci`, `npm run build`, output `dist/`, `cleanUrls`, immutable cache headers for `/_astro/*`. |
+| `.github/workflows/ci.yml` | CI on push/PR to `main`: npm + Node 20 → `astro check` → `astro build` → asserts `/`, `/properties`, `/properties/[id]` exist in `dist/` → uploads `dist` artifact. |
 | `env.example` | Env template. **No env vars are required** (fully static site). Human must rename: `mv env.example .env.example` — agent permission rules deny writing any `.env*` path. |
-| `Dockerfile` + `.dockerignore` | Portable fallback (non-Vercel hosts): node:20-alpine build stage (corepack pnpm 10) → nginx:1.27-alpine serving `dist/` on port 80. |
+| `Dockerfile` + `.dockerignore` | Portable fallback (non-Vercel hosts): node:20-alpine build stage (`npm ci`) → nginx:1.27-alpine serving `dist/` on port 80. |
 
 ## Local verification (run before deploying)
 
 ```sh
-npx pnpm install
-npx pnpm exec astro check   # typecheck — must be clean
-npx pnpm build              # must emit dist/ with the 7 routes
-npx pnpm preview            # smoke-test http://localhost:4321
+npm ci
+npm run check               # typecheck (astro check) — must be clean
+npm run build               # must emit dist/ with the 7 routes
+npm run preview             # smoke-test http://localhost:4321
 ```
 
 ## Exact human steps to actually deploy

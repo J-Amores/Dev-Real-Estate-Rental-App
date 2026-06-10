@@ -16,4 +16,4 @@
 | Utilities | `src/lib/utils.ts` | `cn()` (clsx + tailwind-merge), `formatPrice()` |
 | Static assets | `public/` | Images (`public/images/*` reused by seed data), favicons |
 | Harness docs | `.harness/` | spec, data-model, milestones, rubric, api-contract, progress, baselines (visual ground truth from pre-port commit `c105e19`) |
-| Deploy artifacts | `vercel.json`, `Dockerfile`, `.github/workflows/`, `env.example` | Prepare-only Vercel/static deploy config (see `.harness/deploy-plan.md`) — nothing deploys without an explicit grant |
+| Deploy artifacts | `vercel.json`, `Dockerfile`, `.github/workflows/`, `env.example` | Vercel deploy config (see `.harness/deploy-plan.md`); linked project `jadev-projects/real-estate-app`, live at real-estate-app-dun-ten.vercel.app — new deploys only with an explicit grant |

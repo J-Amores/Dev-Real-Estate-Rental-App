@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Typecheck + Build (Astro)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # Astro 5 pinned for Node 20.x (Astro 6 needs >= 22.12) — keep in sync with local env.
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (astro check)
+        run: pnpm exec astro check
+
+      - name: Build (astro build)
+        run: pnpm build
+
+      - name: Verify required routes in build output
+        run: |
+          set -e
+          test -f dist/index.html
+          test -f dist/properties/index.html
+          ls dist/properties/*/index.html >/dev/null
+          echo "Routes OK: /, /properties, /properties/[id]"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7

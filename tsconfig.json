@@ -9,15 +9,5 @@
     }
   },
   "include": [".astro/types.d.ts", "src/**/*"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".next",
-    "app",
-    "components",
-    "hooks",
-    "lib",
-    "styles",
-    "next-env.d.ts"
-  ]
+  "exclude": ["node_modules", "dist"]
 }

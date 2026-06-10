@@ -11,11 +11,6 @@ export default defineConfig({
   integrations: [preact()],
   vite: {
     plugins: [tailwindcss()],
-    // The root postcss.config.mjs is kept temporarily for the legacy Next.js app
-    // (M0 baseline capture). Neutralize it for Astro so Tailwind v4 runs only
-    // through @tailwindcss/vite. Remove this override once postcss.config.mjs is
-    // deleted in M1 cleanup.
-    css: { postcss: { plugins: [] } },
     resolve: {
       alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
     },
